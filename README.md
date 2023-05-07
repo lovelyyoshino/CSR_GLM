@@ -15,3 +15,14 @@
 
 ```
 
+
+
+
+
+# 参考链接
+
+https://github.com/hikariming/alpaca_chinese_dataset
+
+https://github.com/ssbuild/chatglm_finetuning
+
+https://github.com/binary-husky/gpt_academic

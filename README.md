@@ -30,6 +30,8 @@
         color.py # 颜色信息
         config.py # 配置文件
         get_conf.py # 配置文件读取信息
+        check_proxy.py # 检查代理状态
+        file_conversion.py # 文件转换
         __init__.py
 
 ```

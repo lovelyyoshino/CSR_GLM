@@ -123,7 +123,9 @@ def __read_single_conf_with_lru_cache(arg):
     return r
 
 
-# 开放的接口
+"""
+------------------- 开放的接口-----------------
+"""
 
 def what_keys(keys:str):
     avail_key_list = {'OpenAI Key':0, "API2D Key":0}

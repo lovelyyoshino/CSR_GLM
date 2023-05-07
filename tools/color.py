@@ -1,9 +1,11 @@
 import platform
 from sys import stdout
 
+# 当系统为Linux时直接跳过
 if platform.system()=="Linux":
     pass
 else: 
+    # 使用colorama库来实现颜色输出
     from colorama import init
     init()
 

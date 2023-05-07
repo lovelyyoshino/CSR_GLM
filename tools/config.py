@@ -1,8 +1,8 @@
 # CHAT-GPT api。可同时填写多个API-KEY，用英文逗号分割，例如API_KEY = "sk-openaikey1,sk-openaikey2,fkxxxx-api2dkey1,fkxxxx-api2dkey2"
-API_KEY = "sk-此处填API密钥"
+API_KEY = "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,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"
 
 # CHAT-GPT需要使用代理，所以将USE_PROXY改为True则是应用代理，如果直接在海外服务器部署，此处不修改
-USE_PROXY = False
+USE_PROXY = True
 if USE_PROXY:
     # 填写格式是 [协议]://  [地址] :[端口]，填写之前不要忘记把USE_PROXY改成True，如果直接在海外服务器部署，此处不修改
     # 例如    "socks5h://localhost:11284"
@@ -39,7 +39,7 @@ LOCAL_MODEL_DEVICE = "cpu" # 可选 "cuda"
 
 
 # if __name__ == "__main__":
-#     print("本文件是CHAT-GPT的配置文件，请勿直接运行。这里仅做测试")
+#     print("本文件是CHAT-GPT的配置文件，请勿直接运行。这里仅做测试，这里不建议修改相关的内容")
 #     print("本地LLM模型如ChatGLM的执行方式 CPU/GPU:", LOCAL_MODEL_DEVICE)
 #     LOCAL_MODEL_DEVICE = "cuda"
 #     print("本地LLM模型如ChatGLM的执行方式 CPU/GPU: %s" %LOCAL_MODEL_DEVICE)

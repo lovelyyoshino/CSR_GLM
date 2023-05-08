@@ -49,3 +49,7 @@ https://github.com/ssbuild/chatglm_finetuning
 https://github.com/binary-husky/gpt_academic
 
 https://github.com/carbonz0/alpaca-chinese-dataset
+
+https://github.com/project-baize/baize-chatbot
+
+https://github.com/chenking2020/FindTheChatGPTer

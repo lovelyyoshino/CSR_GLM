@@ -67,7 +67,7 @@ def markdown_convertion(txt:str):
             content = content
         return content
 
-    def replace_math_no_render(match):# 先处理math公式，不需要调用tex2mathml进行渲染
+    def replace_math_no_render(match:re.Match):# 先处理math公式，不需要调用tex2mathml进行渲染
         content = match.group(1)# 匹配到的内容
         if 'mode=display' in match.group(0):# 如果是行间公式
             content = content.replace('\n', '</br>')# 将换行符替换为</br>
@@ -75,7 +75,7 @@ def markdown_convertion(txt:str):
         else:
             return f"<font color=\"#00FF00\">$</font><font color=\"#FF00FF\">{content}</font><font color=\"#00FF00\">$</font>"# 将公式用$包裹起来
 
-    def replace_math_render(match):# 然后调用tex2mathml来渲染这个公式
+    def replace_math_render(match:re.Match):# 然后调用tex2mathml来渲染这个公式
         content = match.group(1)# 匹配到的内容
         if 'mode=display' in match.group(0):# 如果是行间公式
             if '\\begin{aligned}' in content:# 如果是多行公式

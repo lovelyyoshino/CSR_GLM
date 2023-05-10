@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # CHAT-GPT api。可同时填写多个API-KEY，用英文逗号分割，例如API_KEY = "sk-openaikey1,sk-openaikey2,fkxxxx-api2dkey1,fkxxxx-api2dkey2"
 API_KEY = "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,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"
 
@@ -30,7 +31,7 @@ TIMEOUT_SECONDS = 30
 MAX_RETRY = 2
 
 # OpenAI模型选择是（gpt4现在只对申请成功的人开放，体验gpt-4可以试试api2d）
-LLM_MODEL = "gpt-3.5-turbo" # 可选 ↓↓↓
+LLM_MODEL = "gpt-3.5-turbo" # 可选 "gpt-3.5-turbo&chatglm"
 AVAIL_LLM_MODELS = ["gpt-3.5-turbo", "api2d-gpt-3.5-turbo", "gpt-4", "api2d-gpt-4", "chatglm", "newbing"]
 
 

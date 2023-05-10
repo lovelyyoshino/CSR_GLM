@@ -385,7 +385,7 @@ def read_and_clean_pdf_text(fp):
 #     print("8 force:", result)
 
 #     result, one_paragraph = read_and_clean_pdf_text(
-#         "/home/yc/Desktop/操作指令.pdf")
+#         "C://Users//pony//Desktop//bash.pdf")
 #     print("9: pdf", one_paragraph)
 #     write_file("./11.md", result)
 

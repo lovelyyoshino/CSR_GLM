@@ -1,7 +1,3 @@
-from llm_bridge_all import model_type
-from token_calculate import trimmed_format_exc, clip_history
-from ..tools.get_confs import get_conf, select_api_key, what_keys
-from ..tools.color import print亮红, print亮绿, print亮蓝, print亮黄
 import json
 import time
 import gradio as gr
@@ -10,12 +6,17 @@ import traceback
 import requests
 import importlib
 import sys
-sys.path.append("/home/yc/Downloads/gpt_academic/CSR_GLM-main/tools")
+sys.path.append("../tools")
+from llm_bridge_all import model_type
+from token_calculate import trimmed_format_exc, clip_history
+from get_confs import get_conf, select_api_key, what_keys
+from color import print亮红, print亮绿, print亮蓝, print亮黄
+
 
 
 class GetChatGPTHandle:
     def __init__(self) -> None:
-        super().__init__(daemon=True)  # 设置为守护进程,daemon设置为True时，主线程结束，子线程也会结束
+        #super().__init__(daemon=True)  # 设置为守护进程,daemon设置为True时，主线程结束，子线程也会结束
         self.proxies, self.TIMEOUT_SECONDS, self.MAX_RETRY =  \
             get_conf('proxies', 'TIMEOUT_SECONDS', 'MAX_RETRY')
         self.timeout_bot_msg = '[Local Message] Request timeout. Network error. Please check proxy settings in config.py.' + \
@@ -37,7 +38,7 @@ class GetChatGPTHandle:
     整合所有信息，选择LLM模型，生成http请求，为发送请求做准备
     """
 
-    def generate_payload(self, inputs, llm_kwargs, history, system_prompt, stream):
+    def generate_payload(self, inputs, llm_kwargs, history, sys_prompt, stream):
         api_key = select_api_key(
             llm_kwargs['api_key'], llm_kwargs['llm_model'])  # 选择api_key
 
@@ -49,8 +50,8 @@ class GetChatGPTHandle:
         # 除以2是因为history中包含了用户和机器人的对话，每次对话都是两条记录
         conversation_cnt = len(history) // 2
 
-        # openai的第一句话是system_prompt
-        messages = [{"role": "system", "content": system_prompt}]
+        # openai的第一句话是sys_prompt
+        messages = [{"role": "system", "content": sys_prompt}]
         if conversation_cnt:  # 如果有对话记录
             for index in range(0, 2*conversation_cnt, 2):  # 从0开始，每次跳两个
                 what_i_have_asked = {}
@@ -120,13 +121,13 @@ gpt_handle = None
 
 
 def predict_long_connection(inputs, llm_kwargs, history=[], sys_prompt="", console_slience=False):
-    global glm_handle
-    if glm_handle is None:
-        glm_handle = GetChatGPTHandle()
+    global gpt_handle
+    if gpt_handle is None:
+        gpt_handle = GetChatGPTHandle()
 
     try:
-        headers, payload = glm_handle.generate_payload(
-            inputs, llm_kwargs, history, system_prompt=sys_prompt, stream=True)
+        headers, payload = gpt_handle.generate_payload(
+            inputs, llm_kwargs, history, sys_prompt=sys_prompt, stream=True)
     except RuntimeError as e:
         print亮红(inputs,
                 f"您提供的api-key不满足要求，不包含任何可用于{llm_kwargs['llm_model']}的api-key。您可能选择了错误的模型或请求源。")
@@ -138,16 +139,17 @@ def predict_long_connection(inputs, llm_kwargs, history=[], sys_prompt="", conso
             # make a POST request to the API endpoint, stream=False
             endpoint = model_type[llm_kwargs['llm_model']
                                   ]['endpoint']  # 获取对应的链接api
-            response = requests.post(endpoint, headers=headers, proxies=glm_handle.get_proxies(),
-                                     json=payload, stream=True, timeout=glm_handle.get_timeout_second())  # post发送信息
+            print(gpt_handle.get_proxies())
+            response = requests.post(endpoint, headers=headers, proxies=gpt_handle.get_proxies(),
+                                     json=payload, stream=True, timeout=gpt_handle.get_timeout_second())  # post发送信息
             break
         except requests.exceptions.ReadTimeout as e:
             retry += 1
             traceback.print_exc()
-            if retry > glm_handle.get_max_retry():
+            if retry > gpt_handle.get_max_retry():
                 raise TimeoutError
-            if glm_handle.get_max_retry() != 0:
-                print(f'请求超时，正在重试 ({retry}/{glm_handle.get_max_retry()}) ……')
+            if gpt_handle.get_max_retry() != 0:
+                print(f'请求超时，正在重试 ({retry}/{gpt_handle.get_max_retry()}) ……')
     stream_response = response.iter_lines()  # 获取返回信息，并按照lines排列
     result = ""
     while True:
@@ -160,7 +162,7 @@ def predict_long_connection(inputs, llm_kwargs, history=[], sys_prompt="", conso
         if len(chunk) == 0:  # 未能解析or返回为空
             continue
         if not chunk.startswith('data:'):  # 如果起始为data开头
-            error_msg = glm_handle.get_full_error(chunk.encode(
+            error_msg = gpt_handle.get_full_error(chunk.encode(
                 'utf8'), stream_response).decode()  # 获取报错
             if "reduce the length" in error_msg:
                 raise ConnectionAbortedError("OpenAI拒绝了请求:" + error_msg)
@@ -188,13 +190,13 @@ def predict_long_connection(inputs, llm_kwargs, history=[], sys_prompt="", conso
     return result
 
 
-def predict(inputs, llm_kwargs, history=[], system_prompt='', stream=True):
-    global glm_handle
-    if glm_handle is None:
-        glm_handle = GetChatGPTHandle()
+def predict(inputs, llm_kwargs, history=[], sys_prompt='', stream=True):
+    global gpt_handle
+    if gpt_handle is None:
+        gpt_handle = GetChatGPTHandle()
     try:
-        headers, payload = glm_handle.generate_payload(
-            inputs, llm_kwargs, history, system_prompt, stream)
+        headers, payload = gpt_handle.generate_payload(
+            inputs, llm_kwargs, history, sys_prompt, stream)
     except RuntimeError as e:
         print亮红(inputs,
                 f"您提供的api-key不满足要求，不包含任何可用于{llm_kwargs['llm_model']}的api-key。您可能选择了错误的模型或请求源。")
@@ -205,13 +207,13 @@ def predict(inputs, llm_kwargs, history=[], system_prompt='', stream=True):
         try:
             # make a POST request to the API endpoint, stream=True
             endpoint = model_type[llm_kwargs['llm_model']]['endpoint']
-            response = requests.post(endpoint, headers=headers, proxies=glm_handle.get_proxies(),
-                                     json=payload, stream=True, timeout=glm_handle.get_timeout_second())
+            response = requests.post(endpoint, headers=headers, proxies=gpt_handle.get_proxies(),
+                                     json=payload, stream=True, timeout=gpt_handle.get_timeout_second())
             break
         except:
             retry += 1
-            retry_msg = f"，正在重试 ({retry}/{glm_handle.get_max_retry()}) ……" if glm_handle.get_max_retry() > 0 else ""
-            if retry > glm_handle.get_max_retry():
+            retry_msg = f"，正在重试 ({retry}/{gpt_handle.get_max_retry()}) ……" if gpt_handle.get_max_retry() > 0 else ""
+            if retry > gpt_handle.get_max_retry():
                 return ""
 
     gpt_replying_buffer = ""
@@ -246,7 +248,7 @@ def predict(inputs, llm_kwargs, history=[], system_prompt='', stream=True):
                     return gpt_replying_buffer
                 except Exception as e:
                     traceback.print_exc()
-                    chunk = glm_handle.get_full_error(chunk, stream_response)
+                    chunk = gpt_handle.get_full_error(chunk, stream_response)
                     chunk_decoded = chunk.decode()
                     error_msg = chunk_decoded
                     if "reduce the length" in error_msg:
@@ -289,4 +291,6 @@ if __name__ == "__main__":
         'max_length': None,
         'temperature': 1.0,
     }
-    predict("你好", llm_kwargs, history=[], system_prompt='', stream=True)
+    result = predict_long_connection("你好", llm_kwargs, history=[], sys_prompt="你是一个情感专家")
+    print亮绿(result)
+    #predict("你好", llm_kwargs, history=[], sys_prompt='', stream=True)

@@ -1,5 +1,5 @@
 import sys
-sys.path.append("/home/yc/Downloads/gpt_academic/CSR_GLM-main/tools")
+sys.path.append("../tools")
 import copy
 import time
 import threading
@@ -127,13 +127,13 @@ def predict(inputs, llm_kwargs, *args, **kwargs):
     yield from method(inputs, llm_kwargs, *args, **kwargs)
 
 
-# if __name__ == "__main__":
-#     proxies, LLM_MODEL, API_KEY = get_conf('proxies', 'LLM_MODEL',  'API_KEY')
-#     llm_kwargs = {
-#         'api_key': API_KEY,
-#         'llm_model': LLM_MODEL,
-#         'top_p': 1.0,
-#         'max_length': None,
-#         'temperature': 1.0,
-#     }
-#     chat_multiple_with_pre_chat("你好", llm_kwargs, [], "")
+if __name__ == "__main__":
+    proxies, LLM_MODEL, API_KEY = get_conf('proxies', 'LLM_MODEL',  'API_KEY')
+    llm_kwargs = {
+        'api_key': API_KEY,
+        'llm_model': LLM_MODEL,
+        'top_p': 1.0,
+        'max_length': None,
+        'temperature': 1.0,
+    }
+    chat_multiple_with_pre_chat("你好", llm_kwargs, [], "")

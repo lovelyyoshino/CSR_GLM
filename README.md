@@ -21,6 +21,9 @@
 │      __init__.py
 │
 ├─llm_bridge # 连接各个模型和调用的插件渠道
+│      bridge_chatgpt.py # 与chatgpt的桥梁
+│      llm_bridge_all.py # 所有大模型与上级的接口
+│      token_calculate.py # token一些计算原则
 │      __init__.py
 │
 ├─models# 本地模型存放位置
@@ -29,9 +32,9 @@
 └─tools# 通用工具函数，主要用于处理文件信息与可视化
         color.py # 颜色信息
         config.py # 配置文件
-        get_confs.py # 配置文件读取信息
         check_proxy.py # 检查代理状态
         file_conversion.py # 文件转换
+        get_confs.py # 配置文件读取信息
         __init__.py
 
 ```

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from get_conf import get_conf
+from get_confs import get_conf
 from color import print亮红, print亮绿, print亮蓝
 import requests
 

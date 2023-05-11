@@ -4,7 +4,7 @@ from latex2mathml.converter import convert as tex2mathml
 from functools import lru_cache
 import re
 import requests
-import get_conf
+import get_confs
 
 ############## 读取输出文件信息  ###############
 """

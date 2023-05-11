@@ -29,7 +29,7 @@
 └─tools# 通用工具函数，主要用于处理文件信息与可视化
         color.py # 颜色信息
         config.py # 配置文件
-        get_conf.py # 配置文件读取信息
+        get_confs.py # 配置文件读取信息
         check_proxy.py # 检查代理状态
         file_conversion.py # 文件转换
         __init__.py
@@ -53,3 +53,5 @@ https://github.com/carbonz0/alpaca-chinese-dataset
 https://github.com/project-baize/baize-chatbot
 
 https://github.com/chenking2020/FindTheChatGPTer
+
+https://github.com/GaiZhenbiao/ChuanhuChatGPT/tree/main

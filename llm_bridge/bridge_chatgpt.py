@@ -6,12 +6,14 @@ import traceback
 import requests
 import importlib
 import sys
+import re
 sys.path.append("../tools")
 from llm_bridge_all import model_type
 from token_calculate import trimmed_format_exc, clip_history
 from get_confs import get_conf, select_api_key, what_keys
 from color import print亮红, print亮绿, print亮蓝, print亮黄
-
+from check_proxy import check_proxy
+from file_conversion import regular_txt_to_markdown
 
 
 class GetChatGPTHandle:
@@ -165,9 +167,11 @@ def predict_long_connection(inputs, llm_kwargs, history=[], sys_prompt="", conso
             error_msg = gpt_handle.get_full_error(chunk.encode(
                 'utf8'), stream_response).decode()  # 获取报错
             if "reduce the length" in error_msg:
-                raise ConnectionAbortedError("OpenAI拒绝了请求:" + error_msg)
+                print亮红("OpenAI拒绝了请求:" + error_msg)
+                return ""
             else:
-                raise RuntimeError("OpenAI拒绝了请求：" + error_msg)
+                print亮红("OpenAI拒绝了请求：" + error_msg)
+                return ""
         if ('data: [DONE]' in chunk):
             break  # api2d 正常完成
 
@@ -186,7 +190,8 @@ def predict_long_connection(inputs, llm_kwargs, history=[], sys_prompt="", conso
             print亮红("意外Json结构：", delta)
             return result
     if json_data['finish_reason'] == 'length':
-        raise ConnectionAbortedError("正常结束，但显示Token不足，导致输出不完整，请削减单次输入的文本量。")
+        print亮红("正常结束，但显示Token不足，导致输出不完整，请削减单次输入的文本量。")
+        return ""
     return result
 
 
@@ -232,11 +237,21 @@ def predict(inputs, llm_kwargs, history=[], sys_prompt='', stream=True):
             if chunk:
                 try:
                     chunk_decoded = chunk.decode()
+                    if not chunk_decoded.startswith('data:'):  # 如果起始为data开头
+                        error_msg = gpt_handle.get_full_error(chunk_decoded.encode(
+                            'utf8'), stream_response).decode()  # 获取报错
+                        if "reduce the length" in error_msg:
+                            print亮红("OpenAI拒绝了请求:" + error_msg)
+                            return ""
+                        else:
+                            print亮红("OpenAI拒绝了请求：" + error_msg)
+                            return ""
+                        
                     # 前者API2D的
                     if ('data: [DONE]' in chunk_decoded) or (len(json.loads(chunk_decoded[6:])['choices'][0]["delta"]) == 0):
                         # 判定为数据流的结束，gpt_replying_buffer也写完了
                         logging.info(f'[response] {gpt_replying_buffer}')
-                        break
+                        return gpt_replying_buffer
                     # 处理数据流的主体
                     chunkjson = json.loads(chunk_decoded[6:])
                     status_text = f"finish_reason: {chunkjson['choices'][0]['finish_reason']}"
@@ -245,7 +260,6 @@ def predict(inputs, llm_kwargs, history=[], sys_prompt='', stream=True):
                         json.loads(chunk_decoded[6:])[
                             'choices'][0]["delta"]["content"]
                     history[-1] = gpt_replying_buffer
-                    return gpt_replying_buffer
                 except Exception as e:
                     traceback.print_exc()
                     chunk = gpt_handle.get_full_error(chunk, stream_response)
@@ -276,11 +290,10 @@ def predict(inputs, llm_kwargs, history=[], sys_prompt='', stream=True):
                         print亮黄(
                             "[Local Message] Not enough point. API2D账户点数不足.")
                     else:
-                        from toolbox import regular_txt_to_markdown
                         tb_str = '```\n' + trimmed_format_exc() + '```'
-                        regular_txt_to_markdown(chunk_decoded[4:])
-                    return ""
-
+                        return regular_txt_to_markdown(chunk_decoded[4:])
+            # else:
+            #     return history
 
 if __name__ == "__main__":
     proxies, LLM_MODEL, API_KEY = get_conf('proxies', 'LLM_MODEL',  'API_KEY')
@@ -291,6 +304,9 @@ if __name__ == "__main__":
         'max_length': None,
         'temperature': 1.0,
     }
-    result = predict_long_connection("你好", llm_kwargs, history=[], sys_prompt="你是一个情感专家")
-    print亮绿(result)
-    #predict("你好", llm_kwargs, history=[], sys_prompt='', stream=True)
+    if check_proxy(proxies) == True:
+        # result = predict_long_connection("请解释一下mapping的意思", llm_kwargs, history=[""], sys_prompt="你是一个情感专家")
+        # print亮蓝(result)
+        # time.sleep(20)
+        result = predict("robot mapping", llm_kwargs, history=["机器人建图:"], sys_prompt="你是一个slam专家，请翻译下面的短语")
+        print亮蓝(result)

@@ -8,7 +8,6 @@ import importlib
 import sys
 import re
 sys.path.append("../tools")
-from llm_bridge_all import model_type
 from token_calculate import trimmed_format_exc, clip_history
 from get_confs import get_conf, select_api_key, what_keys
 from color import print亮红, print亮绿, print亮蓝, print亮黄
@@ -138,6 +137,7 @@ def predict_long_connection(inputs, llm_kwargs, history=[], sys_prompt="", conso
     retry = 0  # 重试次数
     while True:
         try:
+            from llm_bridge_all import model_type
             # make a POST request to the API endpoint, stream=False
             endpoint = model_type[llm_kwargs['llm_model']
                                   ]['endpoint']  # 获取对应的链接api
@@ -210,6 +210,7 @@ def predict(inputs, llm_kwargs, history=[], sys_prompt='', stream=True):
     retry = 0
     while True:
         try:
+            from llm_bridge_all import model_type
             # make a POST request to the API endpoint, stream=True
             endpoint = model_type[llm_kwargs['llm_model']]['endpoint']
             response = requests.post(endpoint, headers=headers, proxies=gpt_handle.get_proxies(),
@@ -295,18 +296,18 @@ def predict(inputs, llm_kwargs, history=[], sys_prompt='', stream=True):
             # else:
             #     return history
 
-if __name__ == "__main__":
-    proxies, LLM_MODEL, API_KEY = get_conf('proxies', 'LLM_MODEL',  'API_KEY')
-    llm_kwargs = {
-        'api_key': API_KEY,
-        'llm_model': LLM_MODEL,
-        'top_p': 1.0,
-        'max_length': None,
-        'temperature': 1.0,
-    }
-    if check_proxy(proxies) == True:
-        # result = predict_long_connection("请解释一下mapping的意思", llm_kwargs, history=[""], sys_prompt="你是一个情感专家")
-        # print亮蓝(result)
-        # time.sleep(20)
-        result = predict("robot mapping", llm_kwargs, history=["机器人建图:"], sys_prompt="你是一个slam专家，请翻译下面的短语")
-        print亮蓝(result)
+# if __name__ == "__main__":
+#     proxies, LLM_MODEL, API_KEY = get_conf('proxies', 'LLM_MODEL',  'API_KEY')
+#     llm_kwargs = {
+#         'api_key': API_KEY,
+#         'llm_model': LLM_MODEL,
+#         'top_p': 1.0,
+#         'max_length': None,
+#         'temperature': 1.0,
+#     }
+#     if check_proxy(proxies) == True:
+#         result = predict_long_connection("请解释一下mapping的意思", llm_kwargs, history=[""], sys_prompt="你是一个情感专家")
+#         print亮蓝(result)
+#         time.sleep(20)
+#         result = predict("robot mapping", llm_kwargs, history=["机器人建图:"], sys_prompt="你是一个slam专家，请翻译下面的短语")
+#         print亮蓝(result)

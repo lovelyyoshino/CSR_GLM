@@ -7,7 +7,8 @@ from get_confs import get_conf
 from token_calculate import tokenizer_gpt3_5, tokenizer_gpt4, trimmed_format_exc
 from color import print亮红, print亮绿, print亮蓝, print亮黄
 from concurrent.futures import ThreadPoolExecutor
-
+from bridge_chatgpt import predict_long_connection as chatgpt_once
+from bridge_chatgpt import predict as chatgpt_stream
 
 def __get_token_num_gpt35(txt): return len(
     tokenizer_gpt3_5.encode(txt, disallowed_special=()))
@@ -23,16 +24,16 @@ newbing_endpoint = "wss://sydney.bing.com/sydney/ChatHub"
 
 model_type = {
     "gpt-3.5-turbo": {
-        # "fn_with_ui": chatgpt_ui,
-        # "fn_without_ui": chatgpt_noui,
+        "fn_with_ui": chatgpt_stream,
+        "fn_without_ui": chatgpt_once,
         "endpoint": openai_endpoint,
         "max_token": 4096,
         "tokenizer": tokenizer_gpt3_5,
         "token_cnt": __get_token_num_gpt35,
     },
     "gpt-4": {
-        # "fn_with_ui": chatgpt_ui,
-        # "fn_without_ui": chatgpt_noui,
+        "fn_with_ui": chatgpt_stream,
+        "fn_without_ui": chatgpt_once,
         "endpoint": openai_endpoint,
         "max_token": 8192,
         "tokenizer": tokenizer_gpt4,
@@ -45,12 +46,12 @@ def __LLM_CATCH_EXCEPTION(f):
     """
     装饰器函数，将错误显示出来
     """
-    def decorated(inputs, llm_kwargs, history, sys_prompt, observe_window, console_slience):
+    def decorated(inputs, llm_kwargs, history, sys_prompt, console_slience):
         try:
-            return f(inputs, llm_kwargs, history, sys_prompt, observe_window, console_slience)
+            return f(inputs, llm_kwargs, history, sys_prompt, console_slience)
         except Exception as e:
             tb_str = '\n```\n' + trimmed_format_exc() + '\n```\n'
-            observe_window[0] = tb_str
+            print亮黄(tb_str)
             return tb_str
     return decorated
 
@@ -90,27 +91,26 @@ def chat_multiple_with_pre_chat(inputs, llm_kwargs, history, sys_prompt, console
         llm_kwargs_feedin = copy.deepcopy(llm_kwargs)
         llm_kwargs_feedin['llm_model'] = model_t
         print亮绿(f"正在使用{model_t}模型")
-    #     method = model_type[model_t]["fn_without_ui"]
-    #     future = executor.submit(__LLM_CATCH_EXCEPTION(
-    #         method), inputs, llm_kwargs_feedin, history, sys_prompt, window_mutex[i], console_slience)
-    #     futures.append(future)
-    # return_string_collect = []
-    # while True:
-    #     worker_done = [h.done() for h in futures]
-    #     if all(worker_done):
-    #         executor.shutdown()
-    #         break
-    #     time.sleep(1)
+        method = model_type[model_t]["fn_without_ui"]
+        future = executor.submit(__LLM_CATCH_EXCEPTION(
+            method), inputs, llm_kwargs_feedin, history, sys_prompt, console_slience)
+        futures.append(future)
+    return_string_collect = []
+    while True:
+        worker_done = [h.done() for h in futures]
+        if all(worker_done):
+            executor.shutdown()
+            break
+        time.sleep(1)
 
-    # for i, future in enumerate(futures):  # wait and get
-    #     return_string_collect.append(
-    #         f"【{str(models[i])} 说】: {future.result()} </font>")
-
+    for i, future in enumerate(futures):  # wait and get
+        return_string_collect.append(
+            f"【{str(models[i])} 说】: {future.result()} </font>")
+    return return_string_collect
     # llm_kwargs_feedin = copy.deepcopy(llm_kwargs)
     # llm_kwargs_feedin['llm_model'] = "chatglm"
     # # 这个时候会由chatglm总结，这时候需要重新设计sys_prompt
-    # predict(inputs, llm_kwargs_feedin, return_string_collect,
-    #         sys_prompt, console_slience=False)
+    # predict("robot mapping", llm_kwargs, history=["机器人建图:"], sys_prompt="你是一个slam专家，请翻译下面的短语")
 
 
 """
@@ -136,4 +136,4 @@ if __name__ == "__main__":
         'max_length': None,
         'temperature': 1.0,
     }
-    chat_multiple_with_pre_chat("你好", llm_kwargs, [], "")
+    print(chat_multiple_with_pre_chat("你好", llm_kwargs, [], ""))

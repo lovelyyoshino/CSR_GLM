@@ -22,7 +22,7 @@ from models import ChatGLMTokenizer
 
 lora_info_args = {
     'with_lora': True,  # 是否启用lora模块
-    'r': 16,
+    'r': 32,
     'target_modules': ['dense','dense_h_to_4h','dense_4h_to_h','query_key_value'],
     'target_dtype': 16, # 半精度
     'lora_alpha': 32,
@@ -55,14 +55,14 @@ adalora_info_args = {
 }
 #训练时的参数及其对应的值
 train_info_args = {
-    # 'devices': [0, 1, 2, 3],   #表示使用的 GPU 设备数量
-    'devices': 1,
+    # 'devices': [0, 1, 2, 3],   #表示使用的 GPU 设备的id数量
+    'devices': [0],
     'data_backend': 'record',  #one of record lmdb, 超大数据集可以使用 lmdb , 注 lmdb 存储空间比record大,数据的存储
     'model_type': 'chatglm',
     # 预训练模型路径 , 从0训练，则置空
-    'model_name_or_path': '../models/ChatGLM_INT4',
+    'model_name_or_path': './models/chatglm-6b',
     'config_name': './config/config.json',
-    'tokenizer_name': '../models/ChatGLM_INT4', # 分词器路径，如果用预训练模型路径与model_name_or_path相同
+    'tokenizer_name': './models/chatglm-6b', # 分词器路径，如果用预训练模型路径与model_name_or_path相同
     'convert_onnx': False, # 转换onnx模型
     'do_train': True,
     'train_file':  [ './data/output.json'],  #训练数据的路径，这里最好是.json文件的格式
@@ -97,7 +97,7 @@ train_info_args = {
 
 
     'optimizer_betas': (0.9, 0.999), #优化器中用于计算梯度的系数
-    'train_batch_size': 2,    #训练batch
+    'train_batch_size': 4,    #训练batch
     'eval_batch_size': 2,     #验证batch
     'test_batch_size': 2,     #测试batch
     'learning_rate': 2e-5,    #学习率 

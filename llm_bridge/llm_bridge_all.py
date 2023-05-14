@@ -104,13 +104,14 @@ def chat_multiple_with_pre_chat(inputs, llm_kwargs, history, sys_prompt, console
         time.sleep(1)
 
     for i, future in enumerate(futures):  # wait and get
-        return_string_collect.append(
-            f"【{str(models[i])} 说】: {future.result()} </font>")
+        return_string_collect.append(future.result())
+        # return_string_collect.append(
+        #     f"【{str(models[i])} 说】: {future.result()} </font>")
     return return_string_collect
     # llm_kwargs_feedin = copy.deepcopy(llm_kwargs)
     # llm_kwargs_feedin['llm_model'] = "chatglm"
     # # 这个时候会由chatglm总结，这时候需要重新设计sys_prompt
-    # predict("robot mapping", llm_kwargs, history=["机器人建图:"], sys_prompt="你是一个slam专家，请翻译下面的短语")
+    # predict(future.result(), llm_kwargs, history=["机器人建图:"], sys_prompt="你是一个slam专家，请翻译下面的短语")
 
 
 """

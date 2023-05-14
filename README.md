@@ -26,10 +26,10 @@
 │      token_calculate.py # token一些计算原则
 │      __init__.py
 │
-├─models# 本地模型存放位置
+├─models # 本地模型存放位置
 │      __init__.py
 │
-└─tools# 通用工具函数，主要用于处理文件信息与可视化
+└─tools # 通用工具函数，主要用于处理文件信息与可视化
         color.py # 颜色信息
         config.py # 配置文件
         check_proxy.py # 检查代理状态

@@ -75,12 +75,12 @@ def breakdown_txt_to_satisfy_token_limit(txt: str, get_token_fn, limit: int, mus
         return result
 
 
+
 """
-将pdf的文件按照token的limit数量进行切割，返回切割后的文本列表。主要针对pdf文件
+将txt的文件按照token的limit数量进行切割，返回切割后的文本。
 """
 
-
-def breakdown_txt_to_satisfy_token_limit_for_pdf(txt: str, get_token_fn, limit: int):
+def breakdown_txt_to_satisfy_token_limit_using_advance_method(txt: str, get_token_fn, limit: int):
     """
     cut函数，四个函数分别为：要切割的文本，是否必须在空行处切割，是否暴力切割
     """
@@ -147,6 +147,60 @@ def breakdown_txt_to_satisfy_token_limit_for_pdf(txt: str, get_token_fn, limit: 
                 except RuntimeError as e:
                     # 第5次尝试，没办法了，随便切一下敷衍吧
                     return cut(txt, limit, must_break_at_empty_line=False, break_anyway=True)
+
+"""
+将txt的文件按照token的limit数量进行切割，返回切割后的文本。
+"""
+
+def breakdown_txt_to_satisfy_token_limit_using_advance_method_list(txt, get_token_fn, limit):
+    # 递归
+    def cut(txt_tocut, must_break_at_empty_line, break_anyway=False):  
+        if get_token_fn(txt_tocut) <= limit:
+            return [txt_tocut]
+        else:
+            lines = txt_tocut.split('\n')
+            estimated_line_cut = limit / get_token_fn(txt_tocut) * len(lines)
+            estimated_line_cut = int(estimated_line_cut)
+            cnt = 0
+            for cnt in reversed(range(estimated_line_cut)):
+                if must_break_at_empty_line:
+                    if lines[cnt] != "":
+                        continue
+                prev = "\n".join(lines[:cnt])
+                post = "\n".join(lines[cnt:])
+                if get_token_fn(prev) < limit:
+                    break
+            if cnt == 0:
+                if break_anyway:
+                    prev, post = txt_force_breakdown(txt_tocut, limit, get_token_fn)
+                else:
+                    raise RuntimeError(f"存在一行极长的文本！{txt_tocut}")
+            # print(len(post))
+            # 列表递归接龙
+            result = [prev]
+            result.extend(cut(post, must_break_at_empty_line, break_anyway=break_anyway))
+            return result
+    try:
+        # 第1次尝试，将双空行（\n\n）作为切分点
+        return cut(txt, must_break_at_empty_line=True)
+    except RuntimeError:
+        try:
+            # 第2次尝试，将单空行（\n）作为切分点
+            return cut(txt, must_break_at_empty_line=False)
+        except RuntimeError:
+            try:
+                # 第3次尝试，将英文句号（.）作为切分点
+                res = cut(txt.replace('.', '。\n'), must_break_at_empty_line=False) # 这个中文的句号是故意的，作为一个标识而存在
+                return [r.replace('。\n', '.') for r in res]
+            except RuntimeError as e:
+                try:
+                    # 第4次尝试，将中文句号（。）作为切分点
+                    res = cut(txt.replace('。', '。。\n'), must_break_at_empty_line=False)
+                    return [r.replace('。。\n', '。') for r in res]
+                except RuntimeError as e:
+                    # 第5次尝试，没办法了，随便切一下敷衍吧
+                    return cut(txt, must_break_at_empty_line=False, break_anyway=True)
+
 
 
 """
@@ -344,50 +398,50 @@ def read_and_clean_pdf_text(fp):
     return meta_txt, page_one_meta
 
 
-# if __name__ == "__main__":
-#     txt = "三维点云配准是标定、定位、建图和环境重建的等任务中的关键任务。有两种主流的点云配准方法: 广义迭代最近邻方法GICP和正态分布变换NDT方法。\r\n \
-#         GICP算法扩展了经典的ICP算法，通过计算分布到分布的形式提高了配准精度。NDT利用体素化方法避免高昂的最近邻搜索，提高处理速度。由于GICP和其他ICP算法的变种均依赖于最近邻搜索，这使得很难在计算资源受限的计算机中实时的处理大量点云数据。而NDT通常对体素的分辨率大小非常敏感。最佳的体素分辨率取决于环境和传感器属性，如果选择不当的分辨率，则NDT的精度将大幅降低。本文的通过聚合每个体素内所有点的分布，使得体素化的过程更为鲁棒。相比于NDT从点的空间位置估计体素的分布，本文的体素化方法即使体素中有很少的点，也能够产生有效的体素分布。这也使得算法对体素分辨率的改变更加鲁棒。VGICP论文内容写得还是比较详细充实的，从作者的归纳来看论文的贡献有三个方面：\r\n \
-#         \r\n\
-#         1. 首先，提出了一种多点分布聚合方法来从较少的点稳健估计体素的分布。\r\n\
-#         2. 其次，提出了VGICP算法，它与GICP一样精确，但比现有方法快得多。\r\n\
-#         3. 第三，代码开源，并且代码实现了包含了所提出的VGICP以及GICP。"
+if __name__ == "__main__":
+    txt = "三维点云配准是标定、定位、建图和环境重建的等任务中的关键任务。有两种主流的点云配准方法: 广义迭代最近邻方法GICP和正态分布变换NDT方法。\r\n \
+        GICP算法扩展了经典的ICP算法，通过计算分布到分布的形式提高了配准精度。NDT利用体素化方法避免高昂的最近邻搜索，提高处理速度。由于GICP和其他ICP算法的变种均依赖于最近邻搜索，这使得很难在计算资源受限的计算机中实时的处理大量点云数据。而NDT通常对体素的分辨率大小非常敏感。最佳的体素分辨率取决于环境和传感器属性，如果选择不当的分辨率，则NDT的精度将大幅降低。本文的通过聚合每个体素内所有点的分布，使得体素化的过程更为鲁棒。相比于NDT从点的空间位置估计体素的分布，本文的体素化方法即使体素中有很少的点，也能够产生有效的体素分布。这也使得算法对体素分辨率的改变更加鲁棒。VGICP论文内容写得还是比较详细充实的，从作者的归纳来看论文的贡献有三个方面：\r\n \
+        \r\n\
+        1. 首先，提出了一种多点分布聚合方法来从较少的点稳健估计体素的分布。\r\n\
+        2. 其次，提出了VGICP算法，它与GICP一样精确，但比现有方法快得多。\r\n\
+        3. 第三，代码开源，并且代码实现了包含了所提出的VGICP以及GICP。"
 
-#     def get_token_fn(txt: str): return len(txt)
+    def get_token_fn(txt: str): return len(txt)
 
-#     result, status = txt_force_breakdown(txt, get_token_fn, 50)
-#     if status:
-#         print("1:", result)
+    result, status = txt_force_breakdown(txt, get_token_fn, 50)
+    if status:
+        print("1:", result)
 
-#     result = breakdown_txt_to_satisfy_token_limit(txt, get_token_fn, 50, False)
-#     print("2:", result)
+    result = breakdown_txt_to_satisfy_token_limit(txt, get_token_fn, 50, False)
+    print("2:", result)
 
-#     result = breakdown_txt_to_satisfy_token_limit(
-#         txt, get_token_fn, 200, False)
-#     print("3:", result)
+    result = breakdown_txt_to_satisfy_token_limit(
+        txt, get_token_fn, 200, False)
+    print("3:", result)
 
-#     result = breakdown_txt_to_satisfy_token_limit(
-#         txt, get_token_fn, 500, False)
-#     print("4:", result)
+    result = breakdown_txt_to_satisfy_token_limit(
+        txt, get_token_fn, 500, False)
+    print("4:", result)
 
-#     result = breakdown_txt_to_satisfy_token_limit(txt, get_token_fn, 500, True)
-#     print("5:", result)
+    result = breakdown_txt_to_satisfy_token_limit(txt, get_token_fn, 500, True)
+    print("5:", result)
 
-#     result = breakdown_txt_to_satisfy_token_limit_for_pdf(
-#         txt, get_token_fn, 500)
-#     print("6 段落:", result)
+    result = breakdown_txt_to_satisfy_token_limit_using_advance_method(
+        txt, get_token_fn, 500)
+    print("6 段落:", result)
 
-#     result = breakdown_txt_to_satisfy_token_limit_for_pdf(
-#         txt, get_token_fn, 100)
-#     print("7 句号:", result)
+    result = breakdown_txt_to_satisfy_token_limit_using_advance_method_list(
+        txt, get_token_fn, 100)
+    print("7 句号:", result)
 
-#     result = breakdown_txt_to_satisfy_token_limit_for_pdf(
-#         txt, get_token_fn, 50)
-#     print("8 force:", result)
+    result = breakdown_txt_to_satisfy_token_limit_using_advance_method(
+        txt, get_token_fn, 50)
+    print("8 force:", result)
 
-#     result, one_paragraph = read_and_clean_pdf_text(
-#         "C://Users//pony//Desktop//bash.pdf")
-#     print("9: pdf", one_paragraph)
-#     write_file("./11.md", result)
+    # result, one_paragraph = read_and_clean_pdf_text(
+    #     "C://Users//pony//Desktop//bash.pdf")
+    # print("9: pdf", one_paragraph)
+    # write_file("./11.md", result)
 
-#     result = text_divide_as_html_paragraph(txt)
-#     print("10: html", result)
+    # result = text_divide_as_html_paragraph(txt)
+    # print("10: html", result)

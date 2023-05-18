@@ -14,7 +14,6 @@ pymupdf
 openai
 numpy
 arxiv
-pydork
 deep_training
 cpm_kernels
 transformers>=4.26.1

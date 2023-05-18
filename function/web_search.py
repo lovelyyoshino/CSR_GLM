@@ -51,7 +51,7 @@ def get_real_url(v_url, headers):
 		real_url = re.findall("URL='(.*?)'", r.text)[0]
 	# print('real_url is:', real_url)
 	return real_url
-
+# https://github.com/chao325/baidu_getUrls
 def baidu(v_keyword, proxies):
     """
     爬取百度搜素结果

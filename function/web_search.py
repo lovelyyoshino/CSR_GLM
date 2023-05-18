@@ -148,26 +148,27 @@ def website_search(txt, proxies, se=1):
     return say_txt, history
 
 
-if __name__ == "__main__":
-    proxies, LLM_MODEL, API_KEY = get_conf('proxies', 'LLM_MODEL',  'API_KEY')
-    history=[]
-    say_txt="我现在的IP地址为"
-    # if check_proxy(proxies):
-    #     say_txt, history =website_search("我现在的IP地址为", proxies,0)
-    say_txt, history =website_search("我现在的IP地址为", proxies,1)
+# if __name__ == "__main__":
+#     proxies, LLM_MODEL, API_KEY = get_conf('proxies', 'LLM_MODEL',  'API_KEY')
+#     history=[]
+#     say_txt="我现在的IP地址为"
+#     if check_proxy(proxies):
+#         say_txt, history =website_search("我现在的IP地址为", proxies,0)
+#     else:
+#         say_txt, history =website_search("我现在的IP地址为", proxies,1)
     
-    llm_kwargs = {
-        'api_key': API_KEY,
-        'llm_model': LLM_MODEL,
-        'top_p': 1.0,
-        'max_length': None,
-        'temperature': 1.0,
-    }
-    say_txt, history = input_clipping(    # 裁剪输入，从最长的条目开始裁剪，防止爆token
-        inputs=say_txt, 
-        history=history, 
-        max_token_limit=model_type[llm_kwargs['llm_model']]['max_token']*3//4
-    )
-    print亮蓝(f"裁剪后的输入：{say_txt},{history}")
+#     llm_kwargs = {
+#         'api_key': API_KEY,
+#         'llm_model': LLM_MODEL,
+#         'top_p': 1.0,
+#         'max_length': None,
+#         'temperature': 1.0,
+#     }
+#     say_txt, history = input_clipping(    # 裁剪输入，从最长的条目开始裁剪，防止爆token
+#         inputs=say_txt, 
+#         history=history, 
+#         max_token_limit=model_type[llm_kwargs['llm_model']]['max_token']*3//4
+#     )
+#     print亮蓝(f"裁剪后的输入：{say_txt},{history}")
 
 

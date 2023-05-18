@@ -15,6 +15,8 @@
 │      __init__.py
 │
 ├─function # 通用功能函数，与模型输入对接
+│      fuction_utils.py # 函数调用，其他fuction可以直接调用这个函数
+│      web_search.py # 网络检索功能
 │      __init__.py
 │
 ├─gui_bridge # 该模型和阿木官网对接的插件渠道，暂时不用写

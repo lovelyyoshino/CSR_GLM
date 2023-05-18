@@ -1,11 +1,12 @@
 import sys
 import requests
+import random
 import re
 from bs4 import BeautifulSoup
+from time import sleep
 sys.path.append("../llm_bridge")
 from llm_bridge_all import model_type
 from fuction_utils import input_clipping,request_gpt_model_in_new_thread
-from pydork.engine import SearchEngine
 sys.path.append("../tools")
 from get_confs import get_conf
 from color import print亮红, print亮绿, print亮蓝, print亮黄
@@ -36,8 +37,66 @@ def google(query, proxies):
     for r in results:
         print(r['link'])#打印结果
     return results
-        
 
+def get_real_url(v_url, headers):
+	"""
+	获取百度链接真实地址
+	:param v_url: 百度链接地址
+	:return: 真实地址
+	"""
+	r = requests.get(v_url, headers=headers, allow_redirects=False)  # 不允许重定向
+	if r.status_code == 302:  # 如果返回302，就从响应头获取真实地址
+		real_url = r.headers.get('Location')
+	else:  # 否则从返回内容中用正则表达式提取出来真实地址
+		real_url = re.findall("URL='(.*?)'", r.text)[0]
+	# print('real_url is:', real_url)
+	return real_url
+
+def baidu(v_keyword, proxies):
+    """
+    爬取百度搜素结果
+    :param v_max_page: 爬取前几页  【必填】
+    :param v_keyword: 搜索关键词   【必填】
+    :param v_setCookie: 更新Cookie 【不必填】
+    :return: None
+    """
+    setCookie="BIDUPSID=A26AE98583A318DE98C0F123DB07607D; PSTM=1650780390; BAIDUID=A26AE98583A318DED1F2DE82E249C426:FG=1; ZFY=3Y1VeFzr3VhARQLTGQIeZWQnAKiPSxJWjVhb11HhkAs:C; BAIDUID_BFESS=A26AE98583A318DED1F2DE82E249C426:FG=1; __bid_n=186ed6fad3897f84b94207; ZD_ENTRY=other; BCLID=11509748439451522012; BDSFRCVID=lckOJeC62iQ5_ovfQ5FEdDvnAej5cgOTH6_nK5-UJDUtYCUxmdZaEG0PWU8g0KuMzoX4ogKK5mOTH6KF_2uxOjjg8UtVJeC6EG0Ptf8g0f5; H_BDCLCKID_SF=JnujoI_htKI3jbjY5PQEb-_thMuX2tQJfKJ2Bh7F5l8-hRThjqno54Kujtj4KU3qae6-BD5J5h7xOKQ3hx4hqqLpQboJXxJPMIjbhJjN3KJmSUK9bT3v5fuhhnAJ2-biWbTL2MbdJqvP_IoG2Mn8M4bb3qOpBtQmJeTxoUJ25DnJhbLGe4bK-TrBDaDO3J; BCLID_BFESS=11509748439451522012; BDSFRCVID_BFESS=lckOJeC62iQ5_ovfQ5FEdDvnAej5cgOTH6_nK5-UJDUtYCUxmdZaEG0PWU8g0KuMzoX4ogKK5mOTH6KF_2uxOjjg8UtVJeC6EG0Ptf8g0f5; H_BDCLCKID_SF_BFESS=JnujoI_htKI3jbjY5PQEb-_thMuX2tQJfKJ2Bh7F5l8-hRThjqno54Kujtj4KU3qae6-BD5J5h7xOKQ3hx4hqqLpQboJXxJPMIjbhJjN3KJmSUK9bT3v5fuhhnAJ2-biWbTL2MbdJqvP_IoG2Mn8M4bb3qOpBtQmJeTxoUJ25DnJhbLGe4bK-TrBDaDO3J; BA_HECTOR=al258kahaga1aha00h818l9g1i1fd1a1m; PSINO=5; delPer=0; BDORZ=B490B5EBF6F3CD402E515D22BCDA1598; BDUSS=Vk1Sm1HNDg0UE41UTFDZUNURHBQbzBPVkZRaTVmWldYN25ZSkdhM2t0LTZtRDlrSUFBQUFBJCQAAAAAAAAAAAEAAABI4BxUyrLDtNPDu6fD-zAzAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAALoLGGS6CxhkZ; BDUSS_BFESS=Vk1Sm1HNDg0UE41UTFDZUNURHBQbzBPVkZRaTVmWldYN25ZSkdhM2t0LTZtRDlrSUFBQUFBJCQAAAAAAAAAAAEAAABI4BxUyrLDtNPDu6fD-zAzAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAALoLGGS6CxhkZ; H_PS_PSSID=38185_36543_38409_36677_38355_38368_38306_37862_38174_38290_38217_38262_37920_38312_38382_38284_26350_22157_38282_37881; BAIDU_WISE_UID=wapp_1679297819561_943; arialoadData=false; ab_sr=1.0.1_NzlhMzNkNGUxZWY1MDA5MWNkMDczNWIyOWZmYmFlYzgyNjRiNDU1MjlkNGFlZmRlODQ5ZDM4ODE0MzBlOWNjZjgyYmY5YjUzYjMwYjRmMTlhYTcyMzM5M2ZiN2U3MjQ2NDBkOTVlMzc5OWY2Y2U5MjhjMWE3ZmI2MjgxODhiODQ4ZTFjNmQyZThjOTU1Y2QxZDExYWRlODgxMWU4NDlhMzZiOWIwZTA1MzBkYjhkZTlkOWU0MTMzZDQwMmE2NGI3; FPTOKEN=HXFCQlrRn7oMtgFsr8UXdAbJki7qCoSUC6EqXsW8/EAgRfWPStZZI12UxTHhjEFJAEh3b/hxHukGB8s+8qcU4fB3Ufzre+gUcvZZ4L1oAgS0mjO0UA4CKr8ev2XFVk9zw/4p7wn8okHm/EjmYwlxjNzp6TXlqtifz01wSNJC4KkwhVFpV5ZmhRz8GR2DQTamBBSIFQ1wo5VwcAn6I2/0vG/z980WhE92/ih24h/UXIBEOeWRws+gAltdgVfQm+Adhw7kdW8s6gmVfBTlq0pFEaHaY06IF0AcJt+yF8wkMZO8LamxawsxXfEjxSdNh5PH76tAwlUwerDEDuNJshpYphZvAXW5/CV+mbasPCjqU9q+IVotp27Ez0yQ6W8aRqOEwd5P8V5eB1U4Yb/EeWJg1A==|TFoZxLEBUKzZkIlW2yaHBVHmUrbzKRdZukwLXPHc70g=|10|609e064d1dfa88f702b6f86ab8cd7139; RT='z=1&dm=baidu.com&si=dba700fb-0c2b-444d-95ac-b74e3352df3a&ss=lfgik8cv&sl=2&tt=8ik&bcn=https://fclog.baidu.com/log/weirwood?type=perf&ld=5qc&ul=6db&hd=6ek'"
+    # 伪装浏览器请求头
+    headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+    "Accept-Language": "zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7",
+    "Connection": "keep-alive",
+    "Accept-Encoding": "gzip, deflate",
+    "Host": "www.baidu.com",
+    # 需要更换Cookie
+    "Cookie": setCookie
+    }
+    v_max_page =1
+    # 获得每页搜索结果
+    for page in range(v_max_page):
+        # print('开始爬取第{}页'.format(page + 1))
+        wait_seconds = random.uniform(1, 2)  # 等待时长秒
+        # print('开始等待{}秒'.format(wait_seconds))
+        sleep(wait_seconds)  # 随机等待
+        url = 'http://www.baidu.com/s?wd=' + v_keyword + '&pn=' + str(page * 10)
+        r = requests.get(url, headers=headers)
+        html = r.text
+        # print('响应码是:{}'.format(r.status_code))
+        # print(html)
+        soup = BeautifulSoup(html, 'html.parser')
+        result_list_0 = soup.find_all(class_='result c-container new-pmd')
+        result_list_1 = soup.find_all(class_='result c-container xpath-log new-pmd')
+        result_list = result_list_0 + result_list_1
+        url_over = []  # 百度的链接
+        for result in result_list:
+            title = result.find('a').text
+            href = result.find('a')['href']
+            real_url = get_real_url(v_url=href,headers=headers)
+            url_over.append({'title': title, 'link': real_url})
+        return url_over
+        # for item in url_over:
+        #     result_all.append(item)
 
 def scrape_text(url, proxies) -> str:#根据url爬取网页内容
     """Scrape text from a webpage
@@ -74,25 +133,16 @@ def website_search(txt, proxies, se=1):
     history = []
     say_txt = f"从以上搜索结果中抽取信息，然后回答问题：{txt}"
     urls=[]
-    search_engine = SearchEngine()
     if se==0:
-        search_engine.set('google')
-        search_engine.set_proxy(proxies)
-        # urls = google(txt,proxies)
-        urls = search_engine.search(txt, maximum=30)
+        urls = google(txt,proxies)
     elif se==1:
-        search_engine.set('yahoo')
-        urls = search_engine.search(txt)
-        print亮红(urls)
+        urls = baidu(txt,proxies)
 
     # ------------- < 第2步：依次访问网页 > -------------
     max_search_result = 5   # 最多收纳多少个网页的结果
     if len(urls)>max_search_result:
         for index, url in enumerate(urls[:max_search_result]):
-            json_url = url['link'].replace("/url?q=","")
-            json_url = json_url.split("&sa=")[0]
-            print(json_url)
-            res = scrape_text(json_url, proxies)
+            res = scrape_text(url['link'], proxies)
             history.extend([f"第{index}份搜索结果：", res])
 
     return say_txt, history

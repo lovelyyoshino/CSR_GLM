@@ -1,4 +1,4 @@
 # python
 *.py[cod]
-models/
+model_all/model_glm_int4
 output/

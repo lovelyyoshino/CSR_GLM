@@ -1,6 +1,5 @@
 # code
 model_all/model_glm_int4
-.CSR_GLM/ChatGLM-6B/output/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

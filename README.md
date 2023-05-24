@@ -11,7 +11,7 @@
 │  README.md
 │  requirements.txt
 │
-├─chatglm # chatglm模型所在位置，这里我们选择：https://github.com/ssbuild/chatglm_finetuning作为微调模型
+├─chatglm # chatglm模型所在位置
 │      __init__.py
 │
 ├─function # 通用功能函数，与模型输入对接

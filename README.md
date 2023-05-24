@@ -62,3 +62,5 @@ https://github.com/chenking2020/FindTheChatGPTer
 https://github.com/GaiZhenbiao/ChuanhuChatGPT/tree/main
 
 https://github.com/liangwq/Chatglm_lora_multi-gpu
+
+https://github.com/hiyouga/ChatGLM-Efficient-Tuning

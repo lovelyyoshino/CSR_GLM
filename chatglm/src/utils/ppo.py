@@ -42,7 +42,7 @@ def replace_model(model: AutoModelForCausalLMWithValueHead, target: Literal["def
 
 def cast_layernorm_dtype(
         model: AutoModelForCausalLMWithValueHead,
-        layer_norm_names: List[str] = ["layernorm"], # for chatglm setting
+        layer_norm_names: List[str] = ["layernorm"], # 用于chatglm设置
         layer_norm_params: Optional[Dict[str, torch.Tensor]] = None
 ) -> Tuple[AutoModelForCausalLMWithValueHead, Dict[str, torch.Tensor]]:
 
@@ -51,9 +51,9 @@ def cast_layernorm_dtype(
     for name, param in model.named_parameters():
         if param.ndim == 1 and any(layer_norm_name in name for layer_norm_name in layer_norm_names):
             if layer_norm_params is not None:
-                param.data = layer_norm_params[name] # restore float32 weights
+                param.data = layer_norm_params[name] # 恢复float32权重
             else:
-                layer_norm_state_dict[name] = param.data.detach().clone() # store float32 weights for stability
+                layer_norm_state_dict[name] = param.data.detach().clone() # 存储float32类型变量的权重以保持稳定性
                 param.data = param.data.to(torch.float16)
 
     return model, layer_norm_state_dict
@@ -61,7 +61,7 @@ def cast_layernorm_dtype(
 
 class PPOTrainerForChatGLM(PPOTrainer, PeftTrainer):
     r"""
-    Inherits PPOTrainer.
+    继承了PPOTrainer。
     """
 
     def __init__(self, training_args: Seq2SeqTrainingArguments, finetuning_args: FinetuningArguments, **kwargs):
@@ -73,7 +73,7 @@ class PPOTrainerForChatGLM(PPOTrainer, PeftTrainer):
 
     def ppo_train(self, max_target_length: int) -> None:
         r"""
-        Implements training loop for the PPO stage, like _inner_training_loop() in Huggingface's Trainer.
+        实现PPO阶段的训练循环，如Huggingface的训练器中的_inner_training_loop()。
         """
         total_train_batch_size = self.config.batch_size * self.config.gradient_accumulation_steps * self.args.world_size
         len_dataloader = len(self.dataloader)
@@ -178,9 +178,8 @@ class PPOTrainerForChatGLM(PPOTrainer, PeftTrainer):
             **generation_kwargs,
     ) -> torch.Tensor:
         r"""
-        Generates model's responses given queries.
-
-        Subclass and override to inject custom behavior.
+        生成给定查询的模型响应。
+        子类化并覆盖以注入自定义行为。
         """
         self.model, layer_norm_params = cast_layernorm_dtype(self.model)
 
@@ -191,8 +190,8 @@ class PPOTrainerForChatGLM(PPOTrainer, PeftTrainer):
 
         response = unwrapped_model.generate(**inputs, **generation_kwargs)
 
-        # Temporary hack to ensure the generation config is not initialized for each iteration of the evaluation loop
-        # Inspired by: https://github.com/huggingface/transformers/blob/v4.28.1/src/transformers/trainer_seq2seq.py#L273
+        # 临时hack，以确保生成配置不会在评估循环的每个迭代中初始化
+        #灵感来源:https://github.com/huggingface/transformers/blob/v4.28.1/src/transformers/trainer_seq2seq.py#L273
         if unwrapped_model.pretrained_model.generation_config._from_model_config:
             unwrapped_model.pretrained_model.generation_config._from_model_config = False
 
@@ -218,9 +217,9 @@ class PPOTrainerForChatGLM(PPOTrainer, PeftTrainer):
         model_inputs: dict,
     ):
         r"""
-        Calculates model outputs in multiple batches.
+        计算多个批次的模型输出。
 
-        Subclass and override to inject custom behavior.
+        子类化并覆盖以注入自定义行为。
         """
         bs = len(model_inputs["input_ids"])
         fbs = self.config.mini_batch_size
@@ -261,9 +260,8 @@ class PPOTrainerForChatGLM(PPOTrainer, PeftTrainer):
 
     def save_model(self, output_dir: Optional[str] = None) -> None:
         r"""
-        Saves model checkpoint.
-
-        Subclass and override to inject custom behavior.
+        保存模型检查点。
+        子类化并覆盖以注入自定义行为。
         """
         if self.args.should_save:
             self._save(output_dir)

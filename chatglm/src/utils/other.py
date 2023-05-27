@@ -53,8 +53,8 @@ class AverageMeter:
         self.avg = self.sum / self.count
 
 
-# Avoid runtime error in model.generate(do_sample=True).
-# Borrowed from: https://huggingface.co/THUDM/chatglm-6b/blob/658202d88ac4bb782b99e99ac3adff58b4d0b813/modeling_chatglm.py#L54
+#避免在model.generate(do_sample=True)中出现运行时错误
+#借鉴自:https://huggingface.co/THUDM/chatglm-6b/blob/658202d88ac4bb782b99e99ac3adff58b4d0b813/modeling_chatglm.py#L54
 class InvalidScoreLogitsProcessor(LogitsProcessor):
 
     def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor) -> torch.FloatTensor:
@@ -70,8 +70,8 @@ def get_logits_processor() -> LogitsProcessorList:
     return logits_processor
 
 
-# Includes: (1) cast the layernorm in fp32 (2) make output embedding layer require grads (3) upcast the lm_head to fp32
-# Inspired by: https://github.com/huggingface/peft/blob/c0209c35abbf88c63aa267800d98a8e212ed0a42/src/peft/utils/other.py#L35
+# 包括:(1)转换fp32中的layernorm(2)使输出嵌入层需要梯度(3)将lm_head上抛到fp32
+#灵感来源:https://github.com/huggingface/peft/blob/c0209c35abbf88c63aa267800d98a8e212ed0a42/src/peft/utils/other.py#L35
 def prepare_model_for_training(
         model: PreTrainedModel,
         output_embedding_layer_name: Optional[str] = "lm_head",
@@ -146,9 +146,9 @@ def load_valuehead_params(model: torch.nn.Module, checkpoint_dir: os.PathLike) -
 
 def auto_configure_device_map(num_gpus: int) -> Dict[str, int]:
     r"""
-    Configures device map for ChatGLM.
+    为ChatGLM配置设备映射。
 
-    Borrowed from: https://github.com/THUDM/ChatGLM-6B/blob/dev_multi_gpu/utils.py#L8
+    借用自:https://github.com/THUDM/ChatGLM-6B/blob/dev_multi_gpu/utils.py#L8
     """
     num_layers = 28
     layers_per_gpu = 30 / num_gpus
@@ -169,7 +169,7 @@ def auto_configure_device_map(num_gpus: int) -> Dict[str, int]:
 
 def smooth(scalars: List[float], weight: Optional[float] = 0.95) -> List[float]:
     """
-    EMA implementation according to TensorBoard.
+    EMA执行根据TensorBoard
     """
     last = scalars[0]
     smoothed = list()
@@ -179,7 +179,9 @@ def smooth(scalars: List[float], weight: Optional[float] = 0.95) -> List[float]:
         last = smoothed_val
     return smoothed
 
-
+'''
+绘制loss曲线图
+'''
 def plot_loss(training_args: Seq2SeqTrainingArguments, keys: Optional[List[str]] = ["loss"]) -> None:
     import matplotlib.pyplot as plt
     data = json.load(open(os.path.join(training_args.output_dir, TRAINER_STATE_NAME), "r"))

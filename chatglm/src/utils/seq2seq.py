@@ -28,21 +28,21 @@ logger = get_logger(__name__)
 @dataclass
 class ComputeMetrics:
     r"""
-    Wraps the tokenizer into metric functions, used in Seq2SeqTrainerForChatGLM.
+    将分词器封装到度量函数中，用于Seq2SeqTrainerForChatGLM。
 
-    Borrowed from: https://github.com/THUDM/ChatGLM-6B/blob/0c2806fea82683349194e21996dd6b3acc3c265b/ptuning/main.py#L307
+    借用自:https://github.com/THUDM/ChatGLM-6B/blob/0c2806fea82683349194e21996dd6b3acc3c265b/ptuning/main.py#L307
     """
 
     tokenizer: PreTrainedTokenizer
 
     def __call__(self, eval_preds: Sequence[Union[np.ndarray, Tuple[np.ndarray]]]) -> Dict[str, float]:
         r"""
-        Uses the model predictions to compute metrics.
+        使用模型预测来计算指标
         """
         preds, labels = eval_preds
         if isinstance(preds, tuple):
             preds = preds[0]
-        # Replace IGNORE_INDEX in the labels with pad_token_id as we cannot decode them if ignore_pad_token_for_loss=True.
+        # 如果ignore_pad_token_for_loss=True，则将标签中的IGNORE_INDEX替换为pad_token_id，因为我们无法解码它们
         preds = np.where(preds != IGNORE_INDEX, preds, self.tokenizer.pad_token_id)
         labels = np.where(labels != IGNORE_INDEX, labels, self.tokenizer.pad_token_id)
 
@@ -69,7 +69,7 @@ class ComputeMetrics:
 
 class Seq2SeqTrainerForChatGLM(PeftTrainer):
     r"""
-    Inherits PeftTrainer to compute generative metrics such as BLEU and ROUGE.
+    继承PeftTrainer来计算生成指标，如BLEU和ROUGE。
     """
 
     def prediction_step(
@@ -80,11 +80,9 @@ class Seq2SeqTrainerForChatGLM(PeftTrainer):
             ignore_keys: Optional[List[str]] = None
     ) -> Tuple[Optional[float], Optional[torch.Tensor], Optional[torch.Tensor]]:
         r"""
-        Performs an evaluation step on `model` using `inputs` for ChatGLM.
-
-        Now it only supports single GPU (without Accelerate).
-
-        Subclass and override to inject custom behavior. It should not be directly used by external scripts.
+        使用ChatGLM的“输入”对“模型”执行评估步骤。
+        现在它只支持单个GPU(没有加速)。
+        子类化并覆盖以注入自定义行为。它不应该被外部脚本直接使用。
         """
         if not self.args.predict_with_generate or prediction_loss_only:
             return super().prediction_step(
@@ -106,20 +104,20 @@ class Seq2SeqTrainerForChatGLM(PeftTrainer):
         generated_tokens = self.model.generate(**inputs, **gen_kwargs)
         generated_tokens = generated_tokens[:, inputs["input_ids"].size(-1):] # important for ChatGLM
 
-        # Temporary hack to ensure the generation config is not initialized for each iteration of the evaluation loop
-        # Inspired by: https://github.com/huggingface/transformers/blob/v4.28.1/src/transformers/trainer_seq2seq.py#L273
+        #临时hack，以确保生成配置不会在每次求值循环的迭代中初始化
+        #灵感来源:https://github.com/huggingface/transformers/blob/v4.28.1/src/transformers/trainer_seq2seq.py#L273
         if self.model.generation_config._from_model_config:
             self.model.generation_config._from_model_config = False
 
-        # Retrieves GenerationConfig from model.generation_config
+        # 从model.generation_config中检索GenerationConfig
         gen_config = self.model.generation_config
-        # in case the batch is shorter than max length, the output should be padded
+        # 如果批处理长度小于最大长度，则应该填充输出
         if generated_tokens.shape[-1] < gen_config.max_length:
             generated_tokens = self._pad_tensors_to_max_len(generated_tokens, gen_config.max_length)
         elif gen_config.max_new_tokens is not None and generated_tokens.shape[-1] < gen_config.max_new_tokens + 1:
             generated_tokens = self._pad_tensors_to_max_len(generated_tokens, gen_config.max_new_tokens + 1)
 
-        loss = None # we cannot compute loss while generation
+        loss = None # 我们不能在一代中计算损失
 
         if self.args.prediction_loss_only:
             return loss, None, None
@@ -141,9 +139,8 @@ class Seq2SeqTrainerForChatGLM(PeftTrainer):
             tokenizer: PreTrainedTokenizer
     ) -> None:
         r"""
-        Saves model predictions to `output_dir`.
-
-        A custom behavior that not contained in Seq2SeqTrainer.
+        将模型预测保存到`output_dir`。
+        Seq2SeqTrainer中不包含的自定义行为。
         """
         if not self.is_world_process_zero():
             return

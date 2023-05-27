@@ -25,7 +25,7 @@ logger = get_logger(__name__)
 
 class PeftTrainer(Seq2SeqTrainer):
     r"""
-    Inherits Seq2SeqTrainer to support parameter-efficient checkpoints.
+    继承Seq2SeqTrainer以支持参数高效的检查点
     """
 
     def __init__(self, finetuning_args: FinetuningArguments, **kwargs):
@@ -63,9 +63,9 @@ class PeftTrainer(Seq2SeqTrainer):
 
     def _load_best_model(self):
         r"""
-        Loads trainable parameters from model checkpoint.
+        从模型检查点加载可训练参数。
 
-        Subclass and override to inject custom behavior. It should not be directly used by external scripts.
+        子类化并覆盖以注入自定义行为。它不应该被外部脚本直接使用。
         """
         logger.info(f"Loading best model from {self.state.best_model_checkpoint} (score: {self.state.best_metric}).")
         model = unwrap_model(self.model)

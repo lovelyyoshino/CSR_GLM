@@ -450,12 +450,12 @@ def preprocess_data(
         return model_inputs
 
     def preprocess_pairwise_dataset(examples):#预处理成对数据集
-        # build input pairs with format `X [gMASK] [BOS] Y1 [EOS]` and `X [gMASK] [BOS] Y2 [EOS]`
+        # 使用格式 X [gMASK] [BOS] Y1 [EOS] 和 X [gMASK] [BOS] Y2 [EOS] 构建输入对。
         model_inputs = {"accept_ids": [], "reject_ids": []}
         for prompt, answer in format_example(examples):
-            source_ids = tokenizer.encode(text=prompt, add_special_tokens=False)
-            accept_ids = tokenizer.encode(text=answer[0], add_special_tokens=False)
-            reject_ids = tokenizer.encode(text=answer[1], add_special_tokens=False)
+            source_ids = tokenizer.encode(text=prompt, add_special_tokens=False)#设置问题
+            accept_ids = tokenizer.encode(text=answer[0], add_special_tokens=False)#设置接受的回答
+            reject_ids = tokenizer.encode(text=answer[1], add_special_tokens=False)#设置拒绝的回答
 
             if len(source_ids) > data_args.max_source_length - 2: # gmask and bos tokens
                 source_ids = source_ids[:data_args.max_source_length - 2]
@@ -464,7 +464,7 @@ def preprocess_data(
             if len(reject_ids) > data_args.max_target_length - 1: # eos token
                 reject_ids = reject_ids[:data_args.max_target_length - 1]
 
-            accept_ids = tokenizer.build_inputs_with_special_tokens(source_ids[:], accept_ids) # avoid copying error
+            accept_ids = tokenizer.build_inputs_with_special_tokens(source_ids[:], accept_ids) # 避免复制错误
             reject_ids = tokenizer.build_inputs_with_special_tokens(source_ids[:], reject_ids)
 
             model_inputs["accept_ids"].append(accept_ids)

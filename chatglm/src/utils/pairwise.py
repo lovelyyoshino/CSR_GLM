@@ -22,18 +22,18 @@ class PairwiseDataCollatorForChatGLM(DataCollatorForChatGLM):
         我们生成2 * n个示例，其中前n个示例表示选择的示例和
         最后n个例子代表被拒绝的例子。
         """
-        features = [{"input_ids": feature[key]} for key in ("accept_ids", "reject_ids") for feature in features]
+        features = [{"input_ids": feature[key]} for key in ("accept_ids", "reject_ids") for feature in features]#将文件内部的接受和拒绝的指令按照顺序配列
         return super().__call__(features)
 
 
 class PairwiseTrainerForChatGLM(PeftTrainer):
     r"""
-    继承PeftTrainer来计算成对损失
+    继承PeftTrainer来计算成对损失，一层层继承
     """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.can_return_loss = True # override property to return eval_loss
+        self.can_return_loss = True # 覆盖属性以返回 eval_loss
 
     def compute_loss(self, model, inputs, return_outputs=False):
         r"""
@@ -43,9 +43,9 @@ class PairwiseTrainerForChatGLM(PeftTrainer):
 
         子类化并覆盖以注入自定义行为。它不应该被外部脚本直接使用。
         """
-        batch_size = inputs["input_ids"].size(0) // 2
-        _, _, values = model(**inputs)
-        r_accept, r_reject = values[-1].split(batch_size, dim=0)
-        loss = -torch.log(torch.sigmoid(r_accept - r_reject)).mean()
-        outputs = {"r_accept": r_accept, "r_reject": r_reject}
+        batch_size = inputs["input_ids"].size(0) // 2#将输入的数据集分成两个部分，前一半是接受的，后一半是拒绝的
+        _, _, values = model(**inputs)#将输入的数据集输入到模型中
+        r_accept, r_reject = values[-1].split(batch_size, dim=0)#然后完成拆分
+        loss = -torch.log(torch.sigmoid(r_accept - r_reject)).mean()#计算损失
+        outputs = {"r_accept": r_accept, "r_reject": r_reject}#输出
         return (loss, outputs) if return_outputs else loss

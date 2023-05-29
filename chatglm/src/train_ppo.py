@@ -23,12 +23,12 @@ from utils import (
 
 def main():
 
-    # prepare pretrained model and dataset
+    # 准备预训练模型和数据集
     model_args, data_args, training_args, finetuning_args = prepare_args()
     dataset = prepare_data(model_args, data_args)
     model, tokenizer = load_pretrained(model_args, training_args, finetuning_args, training_args.do_train, stage="ppo")
     dataset = preprocess_data(dataset, tokenizer, data_args, training_args, stage="ppo")
-    data_collator = DataCollatorForChatGLM(tokenizer, model.pretrained_model)
+    data_collator = DataCollatorForChatGLM(tokenizer, model.pretrained_model)#处理数据集，将数据集中的输入和输出分开
 
     ppo_config = PPOConfig(
         model_name=model_args.model_name_or_path,
@@ -38,17 +38,17 @@ def main():
         gradient_accumulation_steps=training_args.gradient_accumulation_steps,
         ppo_epochs=1,
         max_grad_norm=training_args.max_grad_norm
-    )
+    )#ppo的参数
 
-    optimizer = AdamW(filter(lambda p: p.requires_grad, model.parameters()), lr=ppo_config.learning_rate)
+    optimizer = AdamW(filter(lambda p: p.requires_grad, model.parameters()), lr=ppo_config.learning_rate)#优化器
     total_train_batch_size = \
-        training_args.per_device_train_batch_size * training_args.gradient_accumulation_steps * training_args.world_size
+        training_args.per_device_train_batch_size * training_args.gradient_accumulation_steps * training_args.world_size#总的训练批次大小
     lr_scheduler = get_scheduler(
         training_args.lr_scheduler_type,
         optimizer=optimizer,
         num_warmup_steps=training_args.warmup_steps,
         num_training_steps=(training_args.num_train_epochs * math.ceil(len(dataset) / total_train_batch_size))
-    )
+    )#学习率调度器
 
     # Initialize our Trainer
     ppo_trainer = PPOTrainerForChatGLM(
@@ -64,9 +64,9 @@ def main():
         lr_scheduler=lr_scheduler
     )
 
-    ppo_trainer.ppo_train(max_target_length=data_args.max_target_length)
-    ppo_trainer.save_model()
-    ppo_trainer.save_state() # must be after save_model
+    ppo_trainer.ppo_train(max_target_length=data_args.max_target_length)#ppo训练
+    ppo_trainer.save_model()#保存模型
+    ppo_trainer.save_state() # 必须要在save_model之后调用，否则会报错
     if ppo_trainer.is_world_process_zero() and finetuning_args.plot_loss:
         plot_loss(training_args, keys=["loss", "reward"])
 

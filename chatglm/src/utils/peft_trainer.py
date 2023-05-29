@@ -40,13 +40,13 @@ class PeftTrainer(Seq2SeqTrainer):
 
         子类和覆盖以注入自定义行为。它不应直接被外部脚本使用。
         """
-        output_dir = output_dir if output_dir is not None else self.args.output_dir
-        os.makedirs(output_dir, exist_ok=True)
+        output_dir = output_dir if output_dir is not None else self.args.output_dir#输出路径
+        os.makedirs(output_dir, exist_ok=True)#创建文件夹
         logger.info(f"Saving model checkpoint to {output_dir}")
-        model = unwrap_model(self.model)
+        model = unwrap_model(self.model)#解包模型
 
-        if hasattr(model, "pretrained_model"): # for models with valuehead
-            backbone_model = getattr(model, "pretrained_model")
+        if hasattr(model, "pretrained_model"): # 对于具有valuehead的模型
+            backbone_model = getattr(model, "pretrained_model")#获取预训练模型
         else:
             backbone_model = model
 
@@ -55,7 +55,7 @@ class PeftTrainer(Seq2SeqTrainer):
         else:
             torch.save(get_state_dict(backbone_model), os.path.join(output_dir, WEIGHTS_NAME)) # save trainable weights
 
-        if hasattr(model, "v_head"): # save valuehead weights
+        if hasattr(model, "v_head"): # 保存valuehead权重
             torch.save(get_state_dict(getattr(model, "v_head")), os.path.join(output_dir, VALUE_HEAD_FILE_NAME))
 
         torch.save(self.args, os.path.join(output_dir, TRAINING_ARGS_NAME))

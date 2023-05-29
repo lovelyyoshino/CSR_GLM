@@ -18,30 +18,30 @@ from utils import (
 
 def main():
 
-    # Prepare pretrained model and dataset
+    # 准备预训练模型和数据集
     model_args, data_args, training_args, finetuning_args = prepare_args()
     dataset = prepare_data(model_args, data_args)
     model, tokenizer = load_pretrained(model_args, training_args, finetuning_args, training_args.do_train, stage="sft")
     dataset = preprocess_data(dataset, tokenizer, data_args, training_args, stage="sft")
     data_collator = DataCollatorForChatGLM(tokenizer, model, data_args.ignore_pad_token_for_loss)
 
-    # Override the decoding parameters of Seq2SeqTrainer
+    # 覆盖 Seq2SeqTrainer 的解码参数
     training_args.generation_max_length = training_args.generation_max_length if \
                 training_args.generation_max_length is not None else data_args.max_target_length
     training_args.generation_num_beams = data_args.num_beams if \
                 data_args.num_beams is not None else training_args.generation_num_beams
 
-    # Split the dataset
+    # 分割数据集
     if training_args.do_train:
         if data_args.dev_ratio > 1e-6:
             dataset = dataset.train_test_split(test_size=data_args.dev_ratio)
             trainer_kwargs = {"train_dataset": dataset["train"], "eval_dataset": dataset["test"]}
         else:
             trainer_kwargs = {"train_dataset": dataset}
-    else: # do_eval or do_predict
+    else: # do_eval或do_predict
         trainer_kwargs = {"eval_dataset": dataset}
 
-    # Initialize our Trainer
+    # 初始化我们的训练器
     trainer = Seq2SeqTrainerForChatGLM(
         finetuning_args=finetuning_args,
         model=model,
@@ -52,7 +52,7 @@ def main():
         **trainer_kwargs
     )
 
-    # Keyword arguments for `model.generate`
+    # model.generate的关键字参数
     gen_kwargs = {
         "do_sample": True,
         "top_p": 0.7,
@@ -61,7 +61,7 @@ def main():
         "logits_processor": get_logits_processor()
     }
 
-    # Training
+    # 训练
     if training_args.do_train:
         train_result = trainer.train()
         trainer.log_metrics("train", train_result.metrics)
@@ -71,7 +71,7 @@ def main():
         if trainer.is_world_process_zero() and finetuning_args.plot_loss:
             plot_loss(training_args, keys=["loss", "eval_loss"])
 
-    # Evaluation
+    # 评价
     if training_args.do_eval:
         metrics = trainer.evaluate(metric_key_prefix="eval", **gen_kwargs)
         trainer.log_metrics("eval", metrics)

@@ -1,0 +1,17 @@
+CUDA_VISIBLE_DEVICES=0 python src/train_rm.py \
+    --model_name_or_path path_to_llama_model \
+    --do_train \
+    --dataset comparison_gpt4_en \
+    --finetuning_type lora \
+    --checkpoint_dir /home/amov/LLaMA-Efficient-Tuning/output/pt \
+    --output_dir /home/amov/LLaMA-Efficient-Tuning/output/rm \
+    --per_device_train_batch_size 1 \
+    --gradient_accumulation_steps 1 \
+    --lr_scheduler_type cosine \
+    --logging_steps 10 \
+    --save_steps 1000 \
+    --learning_rate 1e-5 \
+    --num_train_epochs 1.0 \
+    --plot_loss \
+    --quantization_bit 8 \
+    --fp16

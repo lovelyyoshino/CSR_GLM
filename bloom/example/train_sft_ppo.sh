@@ -1,0 +1,16 @@
+CUDA_VISIBLE_DEVICES=0 python src/train_ppo.py \
+    --do_train \
+    --dataset alpaca_gpt4_en \
+    --finetuning_type lora \
+    --checkpoint_dir /home/amov/LLaMA-Efficient-Tuning/output/sft \
+    --reward_model /home/amov/LLaMA-Efficient-Tuning/output/rm \
+    --output_dir /home/amov/LLaMA-Efficient-Tuning/output/ppo \
+    --per_device_train_batch_size 1 \
+    --gradient_accumulation_steps 1 \
+    --lr_scheduler_type cosine \
+    --logging_steps 10 \
+    --save_steps 1000 \
+    --learning_rate 1e-5 \
+    --num_train_epochs 1.0 \
+    --quantization_bit 8 \
+    --fp16

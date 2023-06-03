@@ -2,10 +2,10 @@
 
 CUDA_VISIBLE_DEVICES=0 python ../src/train_sft.py \
     --do_train \
-    --model_name_or_path path_to_chatglm6b_model \
+    --model_name_or_path /home/amov/ChatGLM-6B/model_int4 \
     --dataset alpaca_gpt4_zh \
     --dataset_dir ../data \
-    --finetuning_type lora \
+    --finetuning_type p_tuning \
     --output_dir path_to_sft_checkpoint \
     --overwrite_cache \
     --per_device_train_batch_size 4 \
@@ -15,6 +15,5 @@ CUDA_VISIBLE_DEVICES=0 python ../src/train_sft.py \
     --save_steps 1000 \
     --learning_rate 5e-5 \
     --num_train_epochs 3.0 \
-    --quantization_bit 8 \
-    --plot_loss \
-    --fp16
+    --quantization_bit 4 \
+    --plot_loss

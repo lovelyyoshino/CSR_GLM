@@ -1,4 +1,4 @@
-CUDA_VISIBLE_DEVICES=0 python src/train_ppo.py \
+CUDA_VISIBLE_DEVICES=0 ../python src/train_ppo.py \
     --do_train \
     --dataset alpaca_gpt4_en \
     --finetuning_type lora \
@@ -12,5 +12,6 @@ CUDA_VISIBLE_DEVICES=0 python src/train_ppo.py \
     --save_steps 1000 \
     --learning_rate 1e-5 \
     --num_train_epochs 1.0 \
+    --lora_target query_key_value \
     --quantization_bit 8 \
     --fp16

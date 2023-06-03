@@ -1,5 +1,5 @@
-CUDA_VISIBLE_DEVICES=0 python src/train_sft.py \
-    --model_name_or_path /home/amov/LLaMA-Efficient-Tuning/model/model_bloom_3b \
+CUDA_VISIBLE_DEVICES=0 ../python src/train_rm.py \
+    --model_name_or_path /home/amov/LLaMA-Efficient-Tuning/model/bloom \
     --do_train \
     --dataset alpaca_gpt4_en \
     --finetuning_type lora \

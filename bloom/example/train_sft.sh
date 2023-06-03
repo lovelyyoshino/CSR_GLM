@@ -1,10 +1,10 @@
-CUDA_VISIBLE_DEVICES=0 python src/train_rm.py \
-    --model_name_or_path path_to_llama_model \
+CUDA_VISIBLE_DEVICES=0 python ../src/train_sft.py \
+    --model_name_or_path  /home/amov/LLaMA-Efficient-Tuning/model/bloom \
     --do_train \
+    --dataset_dir ../data \
     --dataset comparison_gpt4_en \
     --finetuning_type lora \
-    --checkpoint_dir /home/amov/LLaMA-Efficient-Tuning/output/pt \
-    --output_dir /home/amov/LLaMA-Efficient-Tuning/output/rm \
+    --output_dir /home/amov/LLaMA-Efficient-Tuning/output/sft \
     --per_device_train_batch_size 1 \
     --gradient_accumulation_steps 1 \
     --lr_scheduler_type cosine \
@@ -13,5 +13,6 @@ CUDA_VISIBLE_DEVICES=0 python src/train_rm.py \
     --learning_rate 1e-5 \
     --num_train_epochs 1.0 \
     --plot_loss \
+    --lora_target query_key_value \
     --quantization_bit 8 \
     --fp16

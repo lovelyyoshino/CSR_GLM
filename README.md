@@ -69,3 +69,7 @@ https://github.com/liangwq/Chatglm_lora_multi-gpu
 https://github.com/hiyouga/ChatGLM-Efficient-Tuning
 
 https://github.com/hiyouga/LLaMA-Efficient-Tuning
+
+https://github.com/LianjiaTech/BELLE
+
+https://github.com/yangjianxin1/Firefly

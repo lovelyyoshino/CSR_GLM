@@ -1,6 +1,6 @@
 # 简介
 
-这里是阿木实验室和CSR团队共同组建的基于ChatGLM的大模型软件
+这里是阿木实验室和CSR团队共同组建的基于ChatGLM&Bloom的大模型软件
 
 
 
@@ -10,6 +10,9 @@
 │  chatglm-prompt.py # 初版的chatgpt训练prompt
 │  README.md
 │  requirements.txt
+|
+├─bloom # bloom模型所在位置
+│      __init__.py
 │
 ├─chatglm # chatglm模型所在位置
 │      __init__.py
@@ -64,3 +67,5 @@ https://github.com/GaiZhenbiao/ChuanhuChatGPT/tree/main
 https://github.com/liangwq/Chatglm_lora_multi-gpu
 
 https://github.com/hiyouga/ChatGLM-Efficient-Tuning
+
+https://github.com/hiyouga/LLaMA-Efficient-Tuning

@@ -1,5 +1,5 @@
 # code
-model_all/model_glm_int4
+model_all/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

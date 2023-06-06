@@ -73,3 +73,7 @@ https://github.com/hiyouga/LLaMA-Efficient-Tuning
 https://github.com/LianjiaTech/BELLE
 
 https://github.com/yangjianxin1/Firefly
+
+https://github.com/yuanzhoulvpi2017/zero_nlp/tree/main/chinese_bloom
+
+https://github.com/zejunwang1/bloom_tuning

@@ -11,7 +11,8 @@ from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
     HfArgumentParser,
-    Seq2SeqTrainingArguments
+    Seq2SeqTrainingArguments,
+    BitsAndBytesConfig
 )
 from transformers.utils import check_min_version
 from transformers.utils.versions import require_version
@@ -28,6 +29,8 @@ from peft import (
     get_peft_model
 )
 
+from peft.utils import CONFIG_NAME
+
 from trl import AutoModelForCausalLMWithValueHead
 
 from .config import (
@@ -35,6 +38,8 @@ from .config import (
     DataTrainingArguments,
     FinetuningArguments
 )
+
+from .template import Template
 
 from .other import (
     get_logger,
@@ -46,7 +51,8 @@ from .other import (
 )
 
 check_min_version("4.29.1")
-require_version("datasets>=2.10.0", "To fix: pip install datasets>=2.10.0")
+require_version("datasets>=2.12.0", "To fix: pip install datasets>=2.12.0")
+require_version("accelerate>=0.19.0", "To fix: pip install accelerate>=0.19.0")
 require_version("peft>=0.3.0", "To fix: pip install peft>=0.3.0")
 require_version("trl>=0.4.1", "To fix: pip install trl>=0.4.1")
 
@@ -54,11 +60,12 @@ require_version("trl>=0.4.1", "To fix: pip install trl>=0.4.1")
 logger = get_logger(__name__)
 
 
-def init_adapter(
+def _init_adapter(
         model: PreTrainedModel,
         model_args: ModelArguments,
         finetuning_args: FinetuningArguments,
-        is_trainable: bool
+        is_trainable: bool,
+        is_mergeable: bool
 ) -> PreTrainedModel:
     r"""
     Initializes the adapters.
@@ -83,17 +90,22 @@ def init_adapter(
             else:
                 param.data = param.data.to(torch.float32)
 
-    if finetuning_args.finetuning_type != "lora" and model_args.checkpoint_dir is not None:
-        if len(model_args.checkpoint_dir) > 1:
-            logger.warning("Only LoRA tuning accepts multiple checkpoints.")
-        load_trainable_params(model, model_args.checkpoint_dir[0]) # load model checkpoints for non-peft methods
+    if model_args.checkpoint_dir is not None:
+        if finetuning_args.finetuning_type != "lora":
+            assert is_mergeable and len(model_args.checkpoint_dir) == 1, "Only LoRA tuning accepts multiple checkpoints."
+            load_trainable_params(model, model_args.checkpoint_dir[0]) # load model checkpoints for non-peft methods
+        else:
+            assert is_mergeable or len(model_args.checkpoint_dir) == 1, "Quantized model only accepts a single checkpoint."
 
     if finetuning_args.finetuning_type == "lora":
         logger.info("Fine-tuning method: LoRA")
         lastest_checkpoint = None
 
         if model_args.checkpoint_dir is not None:
-            if is_trainable and model_args.resume_lora_training: # continually train on the lora weights
+            assert os.path.exists(os.path.join(model_args.checkpoint_dir[0], CONFIG_NAME)), \
+                "The given checkpoint is not a LoRA checkpoint, please specify `--finetuning_type full/freeze` instead."
+
+            if (is_trainable and model_args.resume_lora_training) or (not is_mergeable): # continually train on the lora weights
                 checkpoints_to_merge, lastest_checkpoint = model_args.checkpoint_dir[:-1], model_args.checkpoint_dir[-1]
             else:
                 checkpoints_to_merge = model_args.checkpoint_dir
@@ -105,8 +117,8 @@ def init_adapter(
             if len(checkpoints_to_merge) > 0:
                 logger.info("Merged {} model checkpoint(s).".format(len(checkpoints_to_merge)))
 
-            if lastest_checkpoint is not None: # resume lora training
-                model = PeftModel.from_pretrained(model, lastest_checkpoint, is_trainable=True)
+            if lastest_checkpoint is not None: # resume lora training or quantized inference
+                model = PeftModel.from_pretrained(model, lastest_checkpoint, is_trainable=is_trainable)
 
         if is_trainable and lastest_checkpoint is None: # create new lora weights while training
             lora_config = LoraConfig(
@@ -141,45 +153,66 @@ def load_pretrained(
         finetuning_args = FinetuningArguments(finetuning_type="none")
 
     assert stage in ["pt", "sft"] or finetuning_args.finetuning_type == "lora", \
-        "RM and PPO training can only be performed with LoRA method."
+        "RM and PPO training can only be performed with the LoRA method."
+
+    config_kwargs = {
+        "trust_remote_code": True,
+        "cache_dir": model_args.cache_dir,
+        "revision": model_args.model_revision,
+        "use_auth_token": True if model_args.use_auth_token else None,
+    }
 
     tokenizer = AutoTokenizer.from_pretrained(
         model_args.model_name_or_path,
         use_fast=model_args.use_fast_tokenizer,
-        padding_side="left"
+        padding_side="left",
+        **config_kwargs
     )
     tokenizer.pad_token_id = 0 if tokenizer.pad_token_id is None else tokenizer.pad_token_id # set as the <unk> token
 
+    config = AutoConfig.from_pretrained(model_args.model_name_or_path, **config_kwargs)
+    is_mergeable = True
+
     # Quantization configurations (using bitsandbytes library).
-    config_kwargs = {}
     if model_args.quantization_bit is not None:
-        assert model_args.quantization_bit == 8, "We only accept 8-bit quantization."
+        if model_args.quantization_bit == 8:
+            require_version("bitsandbytes>=0.37.0", "To fix: pip install bitsandbytes>=0.37.0")
+            config_kwargs["load_in_8bit"] = True
+            config_kwargs["quantization_config"] = BitsAndBytesConfig(
+                load_in_8bit=True,
+                llm_int8_threshold=6.0
+            )
+        elif model_args.quantization_bit == 4:
+            require_version("bitsandbytes>=0.39.0", "To fix: pip install bitsandbytes>=0.39.0")
+            require_version("transformers>=4.30.0.dev0", "To fix: pip install git+https://github.com/huggingface/transformers.git")
+            require_version("peft>=0.4.0.dev0", "To fix: pip install git+https://github.com/huggingface/peft.git")
+            require_version("accelerate>=0.20.0.dev0", "To fix: pip install git+https://github.com/huggingface/accelerate.git")
+            config_kwargs["load_in_4bit"] = True
+            config_kwargs["quantization_config"] = BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_compute_dtype=model_args.compute_dtype,
+                bnb_4bit_use_double_quant=model_args.double_quantization,
+                bnb_4bit_quant_type=model_args.quantization_type
+            )
+        else:
+            raise NotImplementedError
+        is_mergeable = False
+        config_kwargs["device_map"] = {"": int(os.environ.get("LOCAL_RANK") or 0)}
+        logger.info("Quantizing model to {} bit.".format(model_args.quantization_bit))
 
-        require_version("bitsandbytes>=0.37.0", "bitsandbytes library is required to use this feature.")
-        from bitsandbytes.cuda_setup.main import get_compute_capability, get_cuda_lib_handle, is_cublasLt_compatible
-        cuda = get_cuda_lib_handle()
-        cc = get_compute_capability(cuda)
-        assert is_cublasLt_compatible(cc), "The current GPU(s) is incompatible with quantization."
-
-        config_kwargs["load_in_8bit"] = True
-        config_kwargs["device_map"] = "auto" # it should not be specified outside of load_in_8bit
-        logger.info("Quantized model to {} bit.".format(model_args.quantization_bit))
-
-    config = AutoConfig.from_pretrained(model_args.model_name_or_path)
+    if not is_trainable:
+        config_kwargs["device_map"] = "auto"
 
     # Load and prepare pretrained models (without valuehead).
     model = AutoModelForCausalLM.from_pretrained(
         model_args.model_name_or_path,
         config=config,
-        torch_dtype=torch.float16, # the model weights are float16 type
+        torch_dtype=torch.bfloat16 if model_args.compute_dtype == torch.bfloat16 else torch.float16,
+        low_cpu_mem_usage=True,
         **config_kwargs
     )
     model = prepare_model_for_training(model) if is_trainable else model
-    model = init_adapter(model, model_args, finetuning_args, is_trainable)
-
-    if not is_trainable:
-        model.requires_grad_(False) # fix all model params
-        model = model.half() # cast all params to float16 for inference
+    model = _init_adapter(model, model_args, finetuning_args, is_trainable, is_mergeable)
 
     if stage == "rm" or stage == "ppo": # add value head
         model = AutoModelForCausalLMWithValueHead.from_pretrained(model)
@@ -195,6 +228,10 @@ def load_pretrained(
         # To meet the compliance requirements of the transformers library
         if model_args.quantization_bit is not None:
             model._is_int8_training_enabled = True
+
+    if not is_trainable:
+        model.requires_grad_(False) # fix all model params
+        model = model.half() if model_args.quantization_bit is None else model # cast from fp32 to fp16
 
     print_trainable_params(model)
 
@@ -225,13 +262,16 @@ def prepare_args(
 
     # Check arguments (do not check finetuning_args since it may be loaded from checkpoints)
     if stage != "sft" and training_args.predict_with_generate:
-        raise ValueError("`predict_with_generate` cannot be set as True in PT, RM and PPO stages.")
+        raise ValueError("`predict_with_generate` cannot be set as True at PT, RM and PPO stages.")
 
     if training_args.do_train and training_args.predict_with_generate:
         raise ValueError("`predict_with_generate` cannot be set as True while training.")
 
     if training_args.do_predict and (not training_args.predict_with_generate):
-        raise ValueError("Please enable `predict_with_generate` for saving model predictions.")
+        raise ValueError("Please enable `predict_with_generate` to save model predictions.")
+
+    if model_args.quantization_bit is not None and finetuning_args.finetuning_type == "full":
+        raise ValueError("Quantization is incompatible with the full-parameter tuning.")
 
     if model_args.quantization_bit is not None and (not training_args.do_train):
         logger.warning("Evaluating model in 4/8-bit mode may cause lower scores.")
@@ -239,11 +279,22 @@ def prepare_args(
     if training_args.do_train and (not training_args.fp16):
         logger.warning("We recommend enable fp16 mixed precision training.")
 
+    if data_args.prompt_template == "alpaca":
+        logger.warning("Please specify `prompt_template` if you are using other pre-trained models.")
+
     if training_args.local_rank != -1 and training_args.ddp_find_unused_parameters is None:
         logger.warning("`ddp_find_unused_parameters` needs to be set as False in DDP training.")
         training_args.ddp_find_unused_parameters = False
 
     training_args.optim = "adamw_torch" if training_args.optim == "adamw_hf" else training_args.optim # suppress warning
+
+    if model_args.quantization_bit is not None:
+        if training_args.fp16:
+            model_args.compute_dtype = torch.float16
+        elif training_args.bf16:
+            model_args.compute_dtype = torch.bfloat16
+        else:
+            model_args.compute_dtype = torch.float32
 
     # Log on each process the small summary:
     logger.info(
@@ -256,6 +307,24 @@ def prepare_args(
     transformers.set_seed(training_args.seed)
 
     return model_args, data_args, training_args, finetuning_args
+
+
+def prepare_infer_args() -> Tuple[ModelArguments, DataTrainingArguments, FinetuningArguments]:
+
+    parser = HfArgumentParser((ModelArguments, DataTrainingArguments, FinetuningArguments))
+
+    if len(sys.argv) == 2 and sys.argv[1].endswith(".json"): # Provide arguments with a json file.
+        model_args, data_args, finetuning_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
+    else:
+        model_args, data_args, finetuning_args = parser.parse_args_into_dataclasses()
+
+    if model_args.quantization_bit is not None and finetuning_args.finetuning_type != "lora":
+        raise ValueError("Quantization is only compatible with the LoRA method.")
+
+    if data_args.prompt_template == "alpaca":
+        logger.warning("Please specify `prompt_template` if you are using other pre-trained models.")
+
+    return model_args, data_args, finetuning_args
 
 
 def prepare_data(
@@ -340,21 +409,16 @@ def preprocess_data(
 
     column_names = list(dataset.column_names)
     prefix = data_args.source_prefix if data_args.source_prefix is not None else ""
+    prompt_template = Template(data_args.prompt_template)
 
-    def format_example(examples): # support question with a single answer or multiple answers
+    # support question with a single answer or multiple answers
+    def format_example(examples):
         for i in range(len(examples["prompt"])):
             if examples["prompt"][i] and examples["response"][i]:
                 query, answer = examples["prompt"][i], examples["response"][i]
                 if examples["query"][i]:
                     query += "\n" + examples["query"][i]
-                prompt = "Below is an instruction that describes a task. "
-                prompt += "Write a response that appropriately completes the request.\n"
-                prompt += "Instruction:\n" + prefix
-                if examples["history"][i]:
-                    history = examples["history"][i]
-                    for old_query, response in history:
-                        prompt += "Human: {}\nAssistant: {}\n".format(old_query, response)
-                prompt += "Human: {}\nAssistant: ".format(query)
+                prompt = prompt_template.get_prompt(query, examples["history"][i], prefix)
                 yield prompt, answer
 
     def preprocess_pretrain_dataset(examples):

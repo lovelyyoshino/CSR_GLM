@@ -1,5 +1,6 @@
 import os
 import json
+import torch
 from typing import List, Literal, Optional
 from dataclasses import asdict, dataclass, field
 
@@ -38,20 +39,36 @@ class ModelArguments:
         metadata={"help": "Where to store the pretrained models downloaded from huggingface.co."}
     )
     use_fast_tokenizer: Optional[bool] = field(
-        default=True,
+        default=False,
         metadata={"help": "Whether to use one of the fast tokenizer (backed by the tokenizers library) or not."}
     )
     use_auth_token: Optional[bool] = field(
         default=False,
         metadata={"help": "Will use the token generated when running `huggingface-cli login`."}
     )
+    model_revision: Optional[str] = field(
+        default="main",
+        metadata={"help": "The specific model version to use (can be a branch name, tag name or commit id)."}
+    )
     quantization_bit: Optional[int] = field(
         default=None,
         metadata={"help": "The number of bits to quantize the model."}
     )
+    quantization_type: Optional[Literal["fp4", "nf4"]] = field(
+        default="nf4",
+        metadata={"help": "Quantization data type to use."}
+    )
+    double_quantization: Optional[bool] = field(
+        default=True,
+        metadata={"help": "Compress the quantization statistics through double quantization."}
+    )
+    compute_dtype: Optional[torch.dtype] = field(
+        default=None,
+        metadata={"help": "Used in quantization configs. Do not specify this argument manually."}
+    )
     checkpoint_dir: Optional[str] = field(
         default=None,
-        metadata={"help": "Path to the directory containing the model checkpoints as well as the configurations."}
+        metadata={"help": "Path to the directory(s) containing the delta model checkpoints as well as the configurations."}
     )
     reward_model: Optional[str] = field(
         default=None,
@@ -67,7 +84,7 @@ class ModelArguments:
     )
 
     def __post_init__(self):
-        if self.checkpoint_dir is not None: # support merging lora weights
+        if self.checkpoint_dir is not None: # support merging multiple lora weights
             self.checkpoint_dir = [cd.strip() for cd in self.checkpoint_dir.split(",")]
 
 
@@ -124,10 +141,15 @@ class DataTrainingArguments:
         default=0,
         metadata={"help": "Proportion of the dataset to include in the development set, should be between 0.0 and 1.0."}
     )
+    prompt_template: Optional[str] = field(
+        default="alpaca",
+        metadata={"help": "Which template to use for constructing prompts in training and inference."}
+    )
 
     def __post_init__(self): # support mixing multiple datasets
         dataset_names = [ds.strip() for ds in self.dataset.split(",")]
-        dataset_info = json.load(open(os.path.join(self.dataset_dir, "dataset_info.json"), "r"))
+        with open(os.path.join(self.dataset_dir, "dataset_info.json"), "r") as f:
+            dataset_info = json.load(f)
 
         self.dataset_list: List[DatasetAttr] = []
         for name in dataset_names:
@@ -206,14 +228,14 @@ class FinetuningArguments:
         assert self.finetuning_type in ["none", "freeze", "lora", "full"], "Invalid fine-tuning method."
 
     def save_to_json(self, json_path: str):
-        """Save the content of this instance in JSON format inside `json_path`."""
+        """Saves the content of this instance in JSON format inside `json_path`."""
         json_string = json.dumps(asdict(self), indent=2, sort_keys=True) + "\n"
         with open(json_path, "w", encoding="utf-8") as f:
             f.write(json_string)
 
     @classmethod
     def load_from_json(cls, json_path: str):
-        """Create an instance from the content of `json_path`."""
+        """Creates an instance from the content of `json_path`."""
         with open(json_path, "r", encoding="utf-8") as f:
             text = f.read()
         return cls(**json.loads(text))

@@ -10,7 +10,7 @@ from transformers.modeling_utils import PreTrainedModel
 from transformers.generation.utils import LogitsProcessorList
 from transformers.generation.logits_process import LogitsProcessor
 
-from peft.utils.other import WEIGHTS_NAME
+from peft.utils import WEIGHTS_NAME
 
 
 IGNORE_INDEX = -100
@@ -18,7 +18,10 @@ VALUE_HEAD_FILE_NAME = "value_head.bin"
 FINETUNING_ARGS_NAME = "finetuning_args.json"
 
 
-logger = logging.getLogger(__name__)
+def get_logger(name: str) -> logging.Logger:
+    return logging.getLogger(name)
+
+
 logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
     datefmt="%m/%d/%Y %H:%M:%S",
@@ -27,8 +30,7 @@ logging.basicConfig(
 )
 
 
-def get_logger(name: str) -> logging.Logger:
-    return logging.getLogger(name)
+logger = get_logger(__name__)
 
 
 class AverageMeter:
@@ -52,13 +54,12 @@ class AverageMeter:
 
 
 # Avoid runtime error in model.generate(do_sample=True).
-# Borrowed from: https://huggingface.co/THUDM/chatglm-6b/blob/658202d88ac4bb782b99e99ac3adff58b4d0b813/modeling_chatglm.py#L54
 class InvalidScoreLogitsProcessor(LogitsProcessor):
 
     def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor) -> torch.FloatTensor:
         if torch.isnan(scores).any() or torch.isinf(scores).any():
             scores.zero_()
-            scores[..., 5] = 5e4
+            scores[..., 0] = 1.0
         return scores
 
 
@@ -143,7 +144,7 @@ def load_valuehead_params(model: torch.nn.Module, checkpoint_dir: os.PathLike) -
 
 
 def smooth(scalars: List[float], weight: Optional[float] = 0.9) -> List[float]:
-    """
+    r"""
     EMA implementation according to TensorBoard.
     """
     last = scalars[0]

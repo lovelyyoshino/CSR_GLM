@@ -8,10 +8,10 @@
 
 ```bash
 │  chatglm-prompt.py # 初版的chatgpt训练prompt
-|  pdf_to_json.py # 将pdf文件拆分，并喂给chatglm
+│  pdf_to_json.py # 将pdf文件拆分，并喂给chatglm
 │  README.md
 │  requirements.txt
-|
+│
 ├─bloom # bloom模型所在位置
 │      __init__.py
 │

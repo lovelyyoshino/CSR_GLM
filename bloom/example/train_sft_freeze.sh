@@ -4,6 +4,8 @@ CUDA_VISIBLE_DEVICES=0 python ../src/train_sft.py \
     --dataset_dir ../data \
     --dataset comparison_gpt4_en \
     --finetuning_type lora \
+    --num_layer_trainable 2 \
+    --name_module_trainable self_attention \
     --output_dir /home/amov/LLaMA-Efficient-Tuning/output/sft \
     --per_device_train_batch_size 1 \
     --gradient_accumulation_steps 1 \
@@ -11,7 +13,7 @@ CUDA_VISIBLE_DEVICES=0 python ../src/train_sft.py \
     --logging_steps 10 \
     --save_steps 1000 \
     --learning_rate 1e-3 \
-    --num_train_epochs 1.0 \
+    --num_train_epochs 5.0 \
     --plot_loss \
     --lora_target query_key_value \
     --quantization_bit 8 \

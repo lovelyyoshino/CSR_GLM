@@ -28,11 +28,11 @@ def main():
         gen_kwargs = {
             "input_ids": input_ids,
             "do_sample": True,
-            "top_p": 0.5,
-            "temperature": 0.85,
+            "top_p": 0.4,
+            "temperature": 0.95,
             "num_beams": 1,
-            "max_new_tokens": 2048,
-            "repetition_penalty": 1.2,
+            "max_new_tokens": 1024,
+            "repetition_penalty": 1.0,
             "logits_processor": get_logits_processor(),
             "streamer": streamer
         }
@@ -45,6 +45,8 @@ def main():
             response += new_text
         print()
         history = history + [(query, response)]
+        if len(history)>1000:
+            history = history[-500:]
         return history
 
     history = []

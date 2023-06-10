@@ -17,6 +17,9 @@
     "belle_0.5m": {
         "hf_hub_url": "BelleGroup/train_0.5M_CN"
     },
+    "amov_text": {
+        "file_name": "/home/amov/LLaMA-Efficient-Tuning/data/amov_text.json"
+    },
     "belle_1m": {
         "hf_hub_url": "BelleGroup/train_1M_CN"
     },

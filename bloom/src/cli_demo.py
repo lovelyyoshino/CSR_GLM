@@ -45,6 +45,7 @@ def main():
             response += new_text
         print()
         history = history + [(query, response)]
+        history = []
         if len(history)>1000:
             history = history[-500:]
         return history

@@ -89,5 +89,9 @@ https://github.com/carbonz0/alpaca-chinese-dataset
 
 https://github.com/hikariming/alpaca_chinese_dataset
 
+https://github.com/TigerResearch/TigerBot
+
+https://zhuanlan.zhihu.com/p/609172950
+
 https://www.bilibili.com/video/BV1m8411Z7xm/?buvid=YE4976EFE8199FBB493186957D993D760006&is_story_h5=false&mid=Ff%2B5uAveR4pqTkDl4NM1ig%3D%3D&p=1&plat_id=114&share_from=ugc&share_medium=iphone&share_plat=ios&share_session_id=99E0B5B6-9CF5-4A4B-AD00-459DB9DE65E4&share_source=QQ&share_tag=s_i&timestamp=1686447073&unique_k=23duzv6&up_id=29767536
 

@@ -1,7 +1,7 @@
 import os
 import json
 import torch
-from typing import List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional
 from dataclasses import asdict, dataclass, field
 
 
@@ -56,11 +56,11 @@ class ModelArguments:
     )
     quantization_type: Optional[Literal["fp4", "nf4"]] = field(
         default="nf4",
-        metadata={"help": "Quantization data type to use."}
+        metadata={"help": "Quantization data type to use in int4 training."}
     )
     double_quantization: Optional[bool] = field(
         default=True,
-        metadata={"help": "Compress the quantization statistics through double quantization."}
+        metadata={"help": "Whether to use double quantization in int4 training or not."}
     )
     compute_dtype: Optional[torch.dtype] = field(
         default=None,
@@ -87,6 +87,8 @@ class ModelArguments:
         if self.checkpoint_dir is not None: # support merging multiple lora weights
             self.checkpoint_dir = [cd.strip() for cd in self.checkpoint_dir.split(",")]
 
+        if self.quantization_bit is not None:
+            assert self.quantization_bit in [4, 8], "We only accept 4-bit or 8-bit quantization."
 
 @dataclass
 class DataTrainingArguments:
@@ -125,7 +127,7 @@ class DataTrainingArguments:
         default=None,
         metadata={"help": "For debugging purposes, truncate the number of examples for each dataset."}
     )
-    num_beams: Optional[int] = field(
+    eval_num_beams: Optional[int] = field(
         default=None,
         metadata={"help": "Number of beams to use for evaluation. This argument will be passed to `model.generate`"}
     )
@@ -164,7 +166,7 @@ class DataTrainingArguments:
                 dataset_attr = DatasetAttr(
                     "file",
                     file_name=dataset_info[name]["file_name"],
-                    file_sha1=dataset_info[name]["file_sha1"] if "file_sha1" in dataset_info[name] else None
+                    file_sha1=dataset_info[name].get("file_sha1", None)
                 )
 
             if "columns" in dataset_info[name]:
@@ -193,7 +195,8 @@ class FinetuningArguments:
         default="mlp",
         metadata={"help": "Name of trainable modules for Freeze fine-tuning. \
                   LLaMA choices: [\"mlp\", \"self_attn\"], \
-                  BLOOM choices: [\"mlp\", \"self_attention\"]"}
+                  BLOOM choices: [\"mlp\", \"self_attention\"], \
+                  Baichuan choices: [\"mlp\", \"self_attn\"]"}
     )
     lora_rank: Optional[int] = field(
         default=8,
@@ -210,16 +213,17 @@ class FinetuningArguments:
     lora_target: Optional[str] = field(
         default="q_proj,v_proj",
         metadata={"help": "Name(s) of target modules to apply LoRA. Use comma to separate multiple modules. \
-                  LLaMA choices: [\"q_proj\", \"k_proj\", \"v_proj\", \"o_proj\", \"up_proj\", \"down_proj\"], \
-                  BLOOM choices: [\"query_key_value\", \"dense\", \"dense_\"]"}
+                  LLaMA choices: [\"q_proj\", \"k_proj\", \"v_proj\", \"o_proj\", \"gate_proj\", \"up_proj\", \"down_proj\"], \
+                  BLOOM choices: [\"query_key_value\", \"self_attention.dense\", \"mlp.dense\"], \
+                  Baichuan choices: [\"W_pack\", \"o_proj\", \"gate_proj\", \"up_proj\", \"down_proj\"]"}
     )
 
     def __post_init__(self):
-        if isinstance(self.lora_target, str):
-            self.lora_target = [target.strip() for target in self.lora_target.split(",")] # support custom target modules of LoRA
+        if isinstance(self.lora_target, str): # support custom target modules/layers of LoRA
+            self.lora_target = [target.strip() for target in self.lora_target.split(",")]
 
         if self.num_layer_trainable > 0: # fine-tuning the last n layers if num_layer_trainable > 0
-            trainable_layer_ids = [27-k for k in range(self.num_layer_trainable)]
+            trainable_layer_ids = [27 - k for k in range(self.num_layer_trainable)]
         else: # fine-tuning the first n layers if num_layer_trainable < 0
             trainable_layer_ids = [k for k in range(-self.num_layer_trainable)]
 
@@ -239,3 +243,41 @@ class FinetuningArguments:
         with open(json_path, "r", encoding="utf-8") as f:
             text = f.read()
         return cls(**json.loads(text))
+
+
+@dataclass
+class GeneratingArguments:
+    """
+    Arguments pertaining to specify the decoding parameters.
+    """
+    do_sample: Optional[bool] = field(
+        default=True,
+        metadata={"help": "Whether or not to use sampling, use greedy decoding otherwise."}
+    )
+    temperature: Optional[float] = field(
+        default=0.95,
+        metadata={"help": "The value used to modulate the next token probabilities."}
+    )
+    top_p: Optional[float] = field(
+        default=0.7,
+        metadata={"help": "The smallest set of most probable tokens with probabilities that add up to top_p or higher are kept."}
+    )
+    top_k: Optional[int] = field(
+        default=50,
+        metadata={"help": "The number of highest probability vocabulary tokens to keep for top-k filtering."}
+    )
+    num_beams: Optional[int] = field(
+        default=1,
+        metadata={"help": "Number of beams for beam search. 1 means no beam search."}
+    )
+    max_new_tokens: Optional[int] = field(
+        default=512,
+        metadata={"help": "The maximum numbers of tokens to generate, ignoring the number of tokens in the prompt."}
+    )
+    repetition_penalty: Optional[float] = field(
+        default=1.0,
+        metadata={"help": "The parameter for repetition penalty. 1.0 means no penalty."}
+    )
+
+    def to_dict(self) -> Dict[str, Any]:
+        return asdict(self)

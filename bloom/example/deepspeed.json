@@ -1,6 +1,6 @@
 {
-    "train_micro_batch_size_per_gpu": 16,
-    "gradient_accumulation_steps": 8,
+    "train_micro_batch_size_per_gpu": 1,
+    "gradient_accumulation_steps": 1,
     "zero_allow_untested_optimizer": true,
     "fp16": {
         "enabled": true,

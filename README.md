@@ -15,6 +15,9 @@
 ├─bloom # bloom模型所在位置
 │      __init__.py
 │
+├─langchain # langchain，用于加载数据库
+│      __init__.py
+│
 ├─chatglm # chatglm模型所在位置，由于版权问题，不会维护这部分内容
 │      __init__.py
 │

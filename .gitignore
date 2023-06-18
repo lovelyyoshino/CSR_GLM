@@ -1,5 +1,6 @@
 # code
 model_all/*
+langchain/GanymedeNil/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

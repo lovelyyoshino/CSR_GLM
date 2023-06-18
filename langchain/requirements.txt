@@ -1,36 +1,8 @@
-gradio==3.25.0
-tiktoken>=0.3.3
-requests[socks]
-transformers
-python-markdown-math
-beautifulsoup4
-latex2mathml
-python-docx
-mdtex2html
-colorama
-Markdown
-pygments
-arxiv
-lightning
-torch>=1.13.1
-protobuf
-cpm_kernels
-sentencepiece
-transformers>=4.27.4
-datasets>=2.10.0
-accelerate>=0.18.0
-peft>=0.3.0
-trl>=0.4.1
-jieba
-rouge_chinese
-nltk
-gradio
-mdtex2html
-
 pymupdf
 paddlepaddle==2.4.2
 paddleocr~=2.6.1.3
 langchain==0.0.174
+transformers==4.29.1
 unstructured[local-inference]
 layoutparser[layoutmodels,tesseract]
 nltk~=3.8.1
@@ -53,6 +25,8 @@ openai
 #bitsandbytes; platform_system != "Windows"
 #llama-cpp-python==0.1.34; platform_system != "Windows"
 #https://github.com/abetlen/llama-cpp-python/releases/download/v0.1.34/llama_cpp_python-0.1.34-cp310-cp310-win_amd64.whl; platform_system == "Windows"
+
+torch~=2.0.0
 pydantic~=1.10.7
 starlette~=0.26.1
 numpy~=1.23.5

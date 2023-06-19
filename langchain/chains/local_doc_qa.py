@@ -296,7 +296,7 @@ class LocalDocQA:
                 for file in files:
                     filename = os.path.split(file)[-1]
                     print(filename)
-                    shutil.move(file, os.path.join(
+                    shutil.copy(file, os.path.join(
                         KB_ROOT_PATH, vs_id, "content", filename))
                     filelist.append(os.path.join(
                         KB_ROOT_PATH, vs_id, "content", filename))

@@ -15,11 +15,28 @@ if __name__ == "__main__":
     for root, dirs, files_name in os.walk("/home/amov/langchain/dataset"):
         for file_name in files_name:
             file.append(os.path.join(root, file_name))
-    local_doc_qa.get_vector_store(vs_path, files=file, sentence_size=10,  one_conent="", one_content_segmentation=None)
+    local_doc_qa.get_vector_store(vs_path, files=file, sentence_size=1000,  one_conent="", one_content_segmentation=None)
 
     vs_path_answer =os.path.join(vs_path,"vector_store")
-    prompt = local_doc_qa.get_knowledge_based_answer(query=query,vs_path=vs_path_answer)
-    print(prompt)
-    # prompt  =  local_doc_qa.get_search_result_based_answer(query=query)
-    # print(prompt)
+    print("欢迎使用langchain，输入内容即可对话，clear清空对话历史，stop终止程序")
+    while True:
+        try:
+            query = input("\nInput: ")
+        except UnicodeDecodeError:
+            print("Detected decoding error at the inputs, please set the terminal encoding to utf-8.")
+            continue
+        except Exception:
+            raise
+
+        if query.strip() == "stop":
+            break
+
+        if query.strip() == "clear":
+            history = []
+            print("History has been removed.")
+            continue
+        prompt = local_doc_qa.get_knowledge_based_answer(query=query,vs_path=vs_path_answer)
+        print(prompt)
+        # prompt  =  local_doc_qa.get_search_result_based_answer(query=query)
+        # print(prompt)
 

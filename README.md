@@ -54,7 +54,7 @@
 
 # 参考链接
 
-Chatglm(废弃)
+Chatglm(废弃)：
 
 https://github.com/ssbuild/chatglm_finetuning
 
@@ -66,13 +66,13 @@ https://github.com/liangwq/Chatglm_lora_multi-gpu
 
 https://github.com/hiyouga/ChatGLM-Efficient-Tuning
 
-LLAMA
+LLAMA：
 
 https://github.com/project-baize/baize-chatbot
 
 https://github.com/hiyouga/LLaMA-Efficient-Tuning
 
-Bloom
+Bloom：
 
 https://github.com/LianjiaTech/BELLE
 
@@ -81,6 +81,10 @@ https://github.com/yangjianxin1/Firefly
 https://github.com/yuanzhoulvpi2017/zero_nlp/tree/main/chinese_bloom
 
 https://github.com/zejunwang1/bloom_tuning
+
+加速：
+
+https://github.com/ztxz16/fastllm
 
 常用数据项目：
 

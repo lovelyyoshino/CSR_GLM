@@ -54,7 +54,7 @@
 
 # 参考链接
 
-Chatglm(废弃)：
+Chatglm系列(目前已经支持商用，可恢复)：
 
 https://github.com/ssbuild/chatglm_finetuning
 
@@ -66,13 +66,23 @@ https://github.com/liangwq/Chatglm_lora_multi-gpu
 
 https://github.com/hiyouga/ChatGLM-Efficient-Tuning
 
-LLAMA：
+https://github.com/THUDM/ChatGLM2-6B
+
+
+LLAMA系列：
 
 https://github.com/project-baize/baize-chatbot
 
 https://github.com/hiyouga/LLaMA-Efficient-Tuning
 
-Bloom：
+https://github.com/baichuan-inc/Baichuan-13B
+
+https://github.com/FlagAlpha/Llama2-Chinese
+
+https://github.com/michael-wzhu/Chinese-LlaMA2
+
+
+Bloom系列：
 
 https://github.com/LianjiaTech/BELLE
 
@@ -101,4 +111,9 @@ https://github.com/TigerResearch/TigerBot
 https://zhuanlan.zhihu.com/p/609172950
 
 https://www.bilibili.com/video/BV1m8411Z7xm/?buvid=YE4976EFE8199FBB493186957D993D760006&is_story_h5=false&mid=Ff%2B5uAveR4pqTkDl4NM1ig%3D%3D&p=1&plat_id=114&share_from=ugc&share_medium=iphone&share_plat=ios&share_session_id=99E0B5B6-9CF5-4A4B-AD00-459DB9DE65E4&share_source=QQ&share_tag=s_i&timestamp=1686447073&unique_k=23duzv6&up_id=29767536
+
+扩展工具：
+https://github.com/SupritYoung/RLHF-Label-Tool
+https://github.com/mMrBun/dataset-generate-by-gpt3.5-python
+
 

@@ -1,0 +1,2 @@
+五十四、有关于无人机按照脚本实现多点巡检的相关教程吗？
+https://github.com/amov-lab/Prometheus/blob/v1.1/Modules/mission/waypoint_tracking/waypoint_tracking.cpp

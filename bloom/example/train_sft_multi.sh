@@ -1,4 +1,5 @@
-accelerate launch ../src/train_sft.py \
+accelerate launch ../python src/train_bash.py \
+    --stage sft \
     --model_name_or_path /home/amov/LLaMA-Efficient-Tuning/model/bloom \
     --do_train \
     --dataset_dir ../data \

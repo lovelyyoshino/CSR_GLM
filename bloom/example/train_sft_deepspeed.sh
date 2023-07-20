@@ -1,6 +1,7 @@
 MASTER_PORT=$(shuf -n 1 -i 10000-65535)
 
-deepspeed --num_gpus=2 --master_port $MASTER_PORT ../src/train_sft.py \
+deepspeed --num_gpus=2 --master_port $MASTER_PORT ../python src/train_bash.py \
+    --stage sft \
     --model_name_or_path  /home/amov/LLaMA-Efficient-Tuning/model/bloom \
     --do_train \
     --deepspeed deepspeed.json \

@@ -1,365 +1,397 @@
-# ChatGLM-6B
+# ChatGLM Efficient Tuning
 
-<p align="center">
-   🌐 <a href="https://chatglm.cn/blog" target="_blank">Blog</a> • 🤗 <a href="https://huggingface.co/THUDM/chatglm-6b" target="_blank">HF Repo</a> • 🐦 <a href="https://twitter.com/thukeg" target="_blank">Twitter</a> • 📃 <a href="https://arxiv.org/abs/2103.10360" target="_blank">[GLM@ACL 22]</a> <a href="https://github.com/THUDM/GLM" target="_blank">[GitHub]</a> • 📃 <a href="https://arxiv.org/abs/2210.02414" target="_blank">[GLM-130B@ICLR 23]</a> <a href="https://github.com/THUDM/GLM-130B" target="_blank">[GitHub]</a> <br>
-</p>
-<p align="center">
-    👋 加入我们的 <a href="https://join.slack.com/t/chatglm/shared_invite/zt-1udqapmrr-ocT1DS_mxWe6dDY8ahRWzg" target="_blank">Slack</a> 和 <a href="resources/WECHAT.md" target="_blank">WeChat</a>
-</p>
+[![GitHub Repo stars](https://img.shields.io/github/stars/hiyouga/ChatGLM-Efficient-Tuning?style=social)](https://github.com/hiyouga/ChatGLM-Efficient-Tuning/stargazers)
+[![GitHub Code License](https://img.shields.io/github/license/hiyouga/ChatGLM-Efficient-Tuning)](LICENSE)
+[![GitHub last commit](https://img.shields.io/github/last-commit/hiyouga/ChatGLM-Efficient-Tuning)](https://github.com/hiyouga/ChatGLM-Efficient-Tuning/commits/main)
+[![PyPI](https://img.shields.io/pypi/v/glmtuner)](https://pypi.org/project/glmtuner/)
+[![GitHub pull request](https://img.shields.io/badge/PRs-welcome-blue)](https://github.com/hiyouga/ChatGLM-Efficient-Tuning/pulls)
 
-## 介绍
+Fine-tuning 🤖[ChatGLM-6B](https://github.com/THUDM/ChatGLM-6B) model with 🤗[PEFT](https://github.com/huggingface/peft).
 
-ChatGLM-6B 是一个开源的、支持中英双语的对话语言模型，基于 [General Language Model (GLM)](https://github.com/THUDM/GLM) 架构，具有 62 亿参数。结合模型量化技术，用户可以在消费级的显卡上进行本地部署（INT4 量化级别下最低只需 6GB 显存）。
-ChatGLM-6B 使用了和 ChatGPT 相似的技术，针对中文问答和对话进行了优化。经过约 1T 标识符的中英双语训练，辅以监督微调、反馈自助、人类反馈强化学习等技术的加持，62 亿参数的 ChatGLM-6B 已经能生成相当符合人类偏好的回答，更多信息请参考我们的[博客](https://chatglm.cn/blog)。
+👋 Join our [WeChat](assets/wechat.jpg).
 
-为了方便下游开发者针对自己的应用场景定制模型，我们同时实现了基于 [P-Tuning v2](https://github.com/THUDM/P-tuning-v2) 的高效参数微调方法 [(使用指南)](ptuning/README.md) ，INT4 量化级别下最低只需 7GB 显存即可启动微调。
+\[ English | [中文](README_zh.md) \]
 
-不过，由于 ChatGLM-6B 的规模较小，目前已知其具有相当多的[**局限性**](#局限性)，如事实性/数学逻辑错误，可能生成有害/有偏见内容，较弱的上下文能力，自我认知混乱，以及对英文指示生成与中文指示完全矛盾的内容。请大家在使用前了解这些问题，以免产生误解。更大的基于 1300 亿参数 [GLM-130B](https://github.com/THUDM/GLM-130B) 的 ChatGLM 正在内测开发中。
+## Changelog
 
-**想让 ChatGLM-6B 更符合你的应用场景？欢迎参与 [Badcase 反馈计划](improve/README.md)。**
+[23/07/15] Now we develop an all-in-one Web UI for training, evaluation and inference. Try `train_web.py` to fine-tune ChatGLM-6B model in your Web browser. Thank [@KanadeSiina](https://github.com/KanadeSiina) and [@codemayq](https://github.com/codemayq) for their efforts in the development.
 
-*Read this in [English](README_en.md).*
+[23/07/09] Now we release [FastEdit](https://github.com/hiyouga/FastEdit)⚡🩹, an easy-to-use package for editing the factual knowledge of large language models efficiently. Please follow [FastEdit](https://github.com/hiyouga/FastEdit) if you are interested.
 
-## 更新信息
-**[2023/05/17]** 发布 [VisualGLM-6B](https://github.com/THUDM/VisualGLM-6B)，一个支持图像理解的多模态对话语言模型。
+[23/06/25] Now we align the [demo API](src/api_demo.py) with the [OpenAI's](https://platform.openai.com/docs/api-reference/chat) format where you can insert the fine-tuned model in arbitrary ChatGPT-based applications.
 
-![](resources/visualglm.png)
+[23/06/25] Now we support fine-tuning the [ChatGLM2-6B](https://github.com/THUDM/ChatGLM2-6B) model with our framework!
 
-可以通过本仓库中的 [cli_demo_vision.py](cli_demo_vision.py) 和 [web_demo_vision.py](web_demo_vision.py) 来运行命令行和网页 Demo。注意 VisualGLM-6B 需要额外安装 [SwissArmyTransformer](https://github.com/THUDM/SwissArmyTransformer/) 和 torchvision。更多信息参见 [VisualGLM-6B](https://github.com/THUDM/VisualGLM-6B)。
+[23/06/05] Now we support 4-bit LoRA training (aka [QLoRA](https://github.com/artidoro/qlora)). Try `--quantization_bit 4` argument to work with 4-bit quantized model. (experimental feature)
 
-**[2023/05/15]** 更新 v1.1 版本 checkpoint，训练数据增加英文指令微调数据以平衡中英文数据比例，解决英文回答中夹杂中文词语的现象。
+[23/06/01] We implemented a framework supporting the efficient tuning of LLaMA and BLOOM models. Please follow [LLaMA-Efficient-Tuning](https://github.com/hiyouga/LLaMA-Efficient-Tuning) if you are interested.
 
-<details><summary><b>以下是更新前后的英文问题对比：</b></summary>
+[23/05/19] Now we support using the development set to evaluate the model while training. Try `--dev_ratio` argument to specify the size of development set.
 
-* 问题：Describe a time when you had to make a difficult decision.
-  - v1.0:
-  ![](resources/english-q1-old.png)
-  - v1.1:
-  ![](resources/english-q1-new.png)
-* 问题：Describe the function of a computer motherboard
-  - v1.0:
-  ![](resources/english-q2-old.png)
-  - v1.1:
-  ![](resources/english-q2-new.png)
-* 问题：Develop a plan to reduce electricity usage in a home.
-  - v1.0:
-  ![](resources/english-q3-old.png)
-  - v1.1:
-  ![](resources/english-q3-new.png)
-* 问题：未来的NFT，可能真实定义一种现实的资产，它会是一处房产，一辆汽车，一片土地等等，这样的数字凭证可能比真实的东西更有价值，你可以随时交易和使用，在虚拟和现实中无缝的让拥有的资产继续创造价值，未来会是万物归我所用，但不归我所有的时代。翻译成专业的英语
-  - v1.0:
-  ![](resources/english-q4-old.png)
-  - v1.1:
-  ![](resources/english-q4-new.png)
-</details>
+[23/04/29] Now we support training ChatGLM with **Reinforcement Learning with Human Feedback (RLHF)** ! We provide several examples to run RLHF training, please refer to the `examples` folder for details.
 
-更多更新信息参见 [UPDATE.md](UPDATE.md)
+[23/04/20] Our repo achieved 100 stars within 12 days! Congratulations!
 
-## 友情链接
-对 ChatGLM 进行加速的开源项目：
-* [ChatGLM-MNN](https://github.com/wangzhaode/ChatGLM-MNN): 一个基于 MNN 的 ChatGLM-6B C++ 推理实现，支持根据显存大小自动分配计算任务给 GPU 和 CPU
-* [JittorLLMs](https://github.com/Jittor/JittorLLMs)：最低3G显存或者没有显卡都可运行 ChatGLM-6B FP16， 支持Linux、windows、Mac部署
+[23/04/19] Now we support **merging the weights** of fine-tuned models trained by LoRA! Try `--checkpoint_dir checkpoint1,checkpoint2` argument for continually fine-tuning the models.
 
-基于或使用了 ChatGLM-6B 的开源项目：
-* [langchain-ChatGLM](https://github.com/imClumsyPanda/langchain-ChatGLM)：基于 langchain 的 ChatGLM 应用，实现基于可扩展知识库的问答
-* [闻达](https://github.com/l15y/wenda)：大型语言模型调用平台，基于 ChatGLM-6B 实现了类 ChatPDF 功能
-* [chatgpt_academic](https://github.com/binary-husky/chatgpt_academic): 支持ChatGLM-6B的学术写作与编程工具箱，具有模块化和多线程调用LLM的特点，可并行调用多种LLM。
-* [glm-bot](https://github.com/initialencounter/glm-bot)：将ChatGLM接入Koishi可在各大聊天平台上调用ChatGLM
+[23/04/18] Now we support training the **quantized models** using three fine-tuning methods! Try `quantization_bit` argument for training the model in 4/8 bits.
 
-支持 ChatGLM-6B 和相关应用在线训练的示例项目：
-* [ChatGLM-6B 的部署与微调教程](https://www.heywhale.com/mw/project/6436d82948f7da1fee2be59e)
-* [ChatGLM-6B 结合 langchain 实现本地知识库 QA Bot](https://www.heywhale.com/mw/project/643977aa446c45f4592a1e59)
+[23/04/12] Now we support **training from checkpoints**! Use `--checkpoint_dir` argument to specify the checkpoint model to fine-tune from.
 
-第三方评测：
-* [Measuring Massive Multitask Chinese Understanding](https://arxiv.org/abs/2304.12986)
+[23/04/11] Now we support training with **combined datasets**! Try `--dataset dataset1,dataset2` argument for training with multiple datasets.
 
-更多开源项目参见 [PROJECT.md](PROJECT.md)
+## Datasets
 
-## 使用方式
+- For supervised fine-tuning:
+  - [Stanford Alpaca (en)](https://github.com/tatsu-lab/stanford_alpaca)
+  - [Stanford Alpaca (zh)](https://github.com/ymcui/Chinese-LLaMA-Alpaca)
+  - [GPT-4 Generated Data (en&zh)](https://github.com/Instruction-Tuning-with-GPT-4/GPT-4-LLM)
+  - [Open Assistant (multilingual)](https://huggingface.co/datasets/OpenAssistant/oasst1)
+  - [Self-cognition (zh)](data/self_cognition.json)
+  - [ShareGPT (zh)](https://huggingface.co/datasets/QingyiSi/Alpaca-CoT/tree/main/Chinese-instruction-collection)
+  - [RefGPT (zh)](https://github.com/sufengniu/RefGPT)
+  - [Guanaco Dataset (multilingual)](https://huggingface.co/datasets/JosephusCheung/GuanacoDataset)
+  - [BELLE 2M (zh)](https://huggingface.co/datasets/BelleGroup/train_2M_CN)
+  - [BELLE 1M (zh)](https://huggingface.co/datasets/BelleGroup/train_1M_CN)
+  - [BELLE 0.5M (zh)](https://huggingface.co/datasets/BelleGroup/train_0.5M_CN)
+  - [BELLE Dialogue 0.4M (zh)](https://huggingface.co/datasets/BelleGroup/generated_chat_0.4M)
+  - [BELLE School Math 0.25M (zh)](https://huggingface.co/datasets/BelleGroup/school_math_0.25M)
+  - [BELLE Multiturn Chat 0.8M (zh)](https://huggingface.co/datasets/BelleGroup/multiturn_chat_0.8M)
+  - [Firefly 1.1M (zh)](https://huggingface.co/datasets/YeungNLP/firefly-train-1.1M)
+  - [CodeAlpaca 20k (en)](https://huggingface.co/datasets/sahil2801/CodeAlpaca-20k)
+  - [Alpaca CoT (multilingual)](https://huggingface.co/datasets/QingyiSi/Alpaca-CoT)
+  - [Web QA (zh)](https://huggingface.co/datasets/suolyer/webqa)
+  - [UltraChat (en)](https://github.com/thunlp/UltraChat)
+  - [WebNovel (zh)](https://huggingface.co/datasets/zxbsmk/webnovel_cn)
+- For reward modelling:
+  - [HH-RLHF (en)](https://huggingface.co/datasets/Anthropic/hh-rlhf)
+  - [Open Assistant (multilingual)](https://huggingface.co/datasets/OpenAssistant/oasst1)
+  - [GPT-4 Generated Data (en&zh)](https://github.com/Instruction-Tuning-with-GPT-4/GPT-4-LLM)
 
-### 硬件需求
+Please refer to [data/README.md](data/README.md) for details.
 
-| **量化等级**   | **最低 GPU 显存**（推理） | **最低 GPU 显存**（高效参数微调） |
-| -------------- | ------------------------- | --------------------------------- |
-| FP16（无量化） | 13 GB                     | 14 GB                             |
-| INT8           | 8 GB                     | 9 GB                             |
-| INT4           | 6 GB                      | 7 GB                              |
-### 环境安装
+Some datasets require confirmation before using them, so we recommend logging in with your Hugging Face account using these commands.
 
-使用 pip 安装依赖：`pip install -r requirements.txt`，其中 `transformers` 库版本推荐为 `4.27.1`，但理论上不低于 `4.23.1` 即可。
-
-此外，如果需要在 cpu 上运行量化后的模型，还需要安装 `gcc` 与 `openmp`。多数 Linux 发行版默认已安装。对于 Windows ，可在安装 [TDM-GCC](https://jmeubank.github.io/tdm-gcc/) 时勾选 `openmp`。 Windows 测试环境 `gcc` 版本为 `TDM-GCC 10.3.0`， Linux 为 `gcc 11.3.0`。在 MacOS 上请参考 [Q1](FAQ.md#q1)。
-
-### 代码调用 
-
-可以通过如下代码调用 ChatGLM-6B 模型来生成对话：
-
-```python
->>> from transformers import AutoTokenizer, AutoModel
->>> tokenizer = AutoTokenizer.from_pretrained("THUDM/chatglm-6b", trust_remote_code=True)
->>> model = AutoModel.from_pretrained("THUDM/chatglm-6b", trust_remote_code=True).half().cuda()
->>> model = model.eval()
->>> response, history = model.chat(tokenizer, "你好", history=[])
->>> print(response)
-你好👋!我是人工智能助手 ChatGLM-6B,很高兴见到你,欢迎问我任何问题。
->>> response, history = model.chat(tokenizer, "晚上睡不着应该怎么办", history=history)
->>> print(response)
-晚上睡不着可能会让你感到焦虑或不舒服,但以下是一些可以帮助你入睡的方法:
-
-1. 制定规律的睡眠时间表:保持规律的睡眠时间表可以帮助你建立健康的睡眠习惯,使你更容易入睡。尽量在每天的相同时间上床,并在同一时间起床。
-2. 创造一个舒适的睡眠环境:确保睡眠环境舒适,安静,黑暗且温度适宜。可以使用舒适的床上用品,并保持房间通风。
-3. 放松身心:在睡前做些放松的活动,例如泡个热水澡,听些轻柔的音乐,阅读一些有趣的书籍等,有助于缓解紧张和焦虑,使你更容易入睡。
-4. 避免饮用含有咖啡因的饮料:咖啡因是一种刺激性物质,会影响你的睡眠质量。尽量避免在睡前饮用含有咖啡因的饮料,例如咖啡,茶和可乐。
-5. 避免在床上做与睡眠无关的事情:在床上做些与睡眠无关的事情,例如看电影,玩游戏或工作等,可能会干扰你的睡眠。
-6. 尝试呼吸技巧:深呼吸是一种放松技巧,可以帮助你缓解紧张和焦虑,使你更容易入睡。试着慢慢吸气,保持几秒钟,然后缓慢呼气。
-
-如果这些方法无法帮助你入睡,你可以考虑咨询医生或睡眠专家,寻求进一步的建议。
-```
-模型的实现仍然处在变动中。如果希望固定使用的模型实现以保证兼容性，可以在 `from_pretrained` 的调用中增加 `revision="v1.1.0"` 参数。`v1.1.0` 是当前最新的版本号，完整的版本列表参见 [Change Log](https://huggingface.co/THUDM/chatglm-6b#change-log)。
-
-### 从本地加载模型
-以上代码会由 `transformers` 自动下载模型实现和参数。完整的模型实现可以在 [Hugging Face Hub](https://huggingface.co/THUDM/chatglm-6b)。如果你的网络环境较差，下载模型参数可能会花费较长时间甚至失败。此时可以先将模型下载到本地，然后从本地加载。
-
-从 Hugging Face Hub 下载模型需要先[安装Git LFS](https://docs.github.com/zh/repositories/working-with-files/managing-large-files/installing-git-large-file-storage)，然后运行
-```Shell
-git clone https://huggingface.co/THUDM/chatglm-6b
+```bash
+pip install --upgrade huggingface_hub
+huggingface-cli login
 ```
 
-如果你从 Hugging Face Hub 上下载 checkpoint 的速度较慢，可以只下载模型实现
-```Shell
-GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/THUDM/chatglm-6b
-```
-然后从[这里](https://cloud.tsinghua.edu.cn/d/fb9f16d6dc8f482596c2/)手动下载模型参数文件，并将下载的文件替换到本地的 `chatglm-6b` 目录下。
+## Fine-Tuning Methods
 
-将模型下载到本地之后，将以上代码中的 `THUDM/chatglm-6b` 替换为你本地的 `chatglm-6b` 文件夹的路径，即可从本地加载模型。
+Our script now supports the following fine-tuning methods:
 
-**Optional** 模型的实现仍然处在变动中。如果希望固定使用的模型实现以保证兼容性，可以执行
-```Shell
-git checkout v1.1.0
-```
+- [LoRA](https://arxiv.org/abs/2106.09685)
+  - Fine-tuning the low-rank adapters of the model.
+- [P-Tuning V2](https://github.com/THUDM/P-tuning-v2)
+  - Fine-tuning the prefix encoder of the model.
+- [Freeze](https://arxiv.org/abs/2012.14913)
+  - Fine-tuning the MLPs in the last n blocks of the model.
+- Full Tuning
+  - Fine-tuning all the parameters of the model.
 
-## Demo & API
+## Requirement
 
-我们提供了一个基于 [Gradio](https://gradio.app) 的网页版 Demo 和一个命令行 Demo。使用时首先需要下载本仓库：
+- Python 3.8+ and PyTorch 1.13.1+
+- 🤗Transformers, Datasets, Accelerate, PEFT and TRL
+- fire, protobuf, cpm-kernels and sentencepiece
+- jieba, rouge-chinese and nltk (used at evaluation)
+- gradio and matplotlib (used in train_web.py)
+- uvicorn, fastapi and sse-starlette (used in api_demo.py)
 
-```shell
-git clone https://github.com/THUDM/ChatGLM-6B
-cd ChatGLM-6B
-```
+And **powerful GPUs**!
 
-### 网页版 Demo
+## Getting Started
 
-![web-demo](resources/web-demo.gif)
+### Data Preparation (optional)
 
-首先安装 Gradio：`pip install gradio`，然后运行仓库中的 [web_demo.py](web_demo.py)： 
+Please refer to `data/example_dataset` for checking the details about the format of dataset files. You can either use a single `.json` file or a [dataset loading script](https://huggingface.co/docs/datasets/dataset_script) with multiple files to create a custom dataset.
 
-```shell
-python web_demo.py
-```
+Note: please update `data/dataset_info.json` to use your custom dataset. About the format of this file, please refer to `data/README.md`.
 
-程序会运行一个 Web Server，并输出地址。在浏览器中打开输出的地址即可使用。最新版 Demo 实现了打字机效果，速度体验大大提升。注意，由于国内 Gradio 的网络访问较为缓慢，启用 `demo.queue().launch(share=True, inbrowser=True)` 时所有网络会经过 Gradio 服务器转发，导致打字机体验大幅下降，现在默认启动方式已经改为 `share=False`，如有需要公网访问的需求，可以重新修改为 `share=True` 启动。
+### Dependence Installation (optional)
 
-感谢 [@AdamBear](https://github.com/AdamBear) 实现了基于 Streamlit 的网页版 Demo，运行方式见[#117](https://github.com/THUDM/ChatGLM-6B/pull/117).
-
-### 命令行 Demo
-
-![cli-demo](resources/cli-demo.png)
-
-运行仓库中 [cli_demo.py](cli_demo.py)：
-
-```shell
-python cli_demo.py
+```bash
+git clone https://github.com/hiyouga/ChatGLM-Efficient-Tuning.git
+conda create -n chatglm_etuning python=3.10
+conda activate chatglm_etuning
+cd ChatGLM-Efficient-Tuning
+pip install -r requirements.txt
 ```
 
-程序会在命令行中进行交互式的对话，在命令行中输入指示并回车即可生成回复，输入 `clear` 可以清空对话历史，输入 `stop` 终止程序。
+If you want to enable LoRA(QLoRA) or Freeze quantization on Windows, you will be required to install a pre-built version of `bitsandbytes` library, which supports CUDA 11.1 to 12.1.
 
-### API部署
-首先需要安装额外的依赖 `pip install fastapi uvicorn`，然后运行仓库中的 [api.py](api.py)：
-```shell
-python api.py
+```bash
+pip install https://github.com/jllllll/bitsandbytes-windows-webui/releases/download/wheels/bitsandbytes-0.39.1-py3-none-win_amd64.whl
 ```
-默认部署在本地的 8000 端口，通过 POST 方法进行调用
-```shell
-curl -X POST "http://127.0.0.1:8000" \
-     -H 'Content-Type: application/json' \
-     -d '{"prompt": "你好", "history": []}'
+
+### All-in-one Web UI
+
+```bash
+python src/train_web.py
 ```
-得到的返回值为
-```shell
-{
-  "response":"你好👋！我是人工智能助手 ChatGLM-6B，很高兴见到你，欢迎问我任何问题。",
-  "history":[["你好","你好👋！我是人工智能助手 ChatGLM-6B，很高兴见到你，欢迎问我任何问题。"]],
-  "status":200,
-  "time":"2023-03-23 21:38:40"
+
+### Fine-tuning with a Single GPU
+
+```bash
+CUDA_VISIBLE_DEVICES=0 python src/train_bash.py \
+    --stage sft \
+    --model_name_or_path path_to_your_chatglm_model \
+    --do_train \
+    --dataset alpaca_gpt4_en \
+    --finetuning_type lora \
+    --output_dir path_to_sft_checkpoint \
+    --per_device_train_batch_size 4 \
+    --gradient_accumulation_steps 4 \
+    --lr_scheduler_type cosine \
+    --logging_steps 10 \
+    --save_steps 1000 \
+    --learning_rate 5e-5 \
+    --num_train_epochs 3.0 \
+    --fp16
+```
+
+Please refer to our [Wiki](https://github.com/hiyouga/ChatGLM-Efficient-Tuning/wiki) about the details of the arguments.
+
+### Distributed Fine-tuning with Multiple GPUs
+
+```bash
+accelerate config # configure the environment
+accelerate launch src/train_bash.py # arguments (same as above)
+```
+
+### Training Reward Model
+
+```bash
+CUDA_VISIBLE_DEVICES=0 python src/train_bash.py \
+    --stage rm \
+    --model_name_or_path path_to_your_chatglm_model \
+    --do_train \
+    --dataset comparison_gpt4_en \
+    --finetuning_type lora \
+    --output_dir path_to_rm_checkpoint \
+    --per_device_train_batch_size 4 \
+    --gradient_accumulation_steps 4 \
+    --lr_scheduler_type cosine \
+    --logging_steps 10 \
+    --save_steps 1000 \
+    --learning_rate 1e-5 \
+    --num_train_epochs 1.0 \
+    --fp16
+```
+
+### Training with RLHF
+
+```bash
+CUDA_VISIBLE_DEVICES=0 python src/train_bash.py \
+    --stage ppo \
+    --model_name_or_path path_to_your_chatglm_model \
+    --do_train \
+    --dataset alpaca_gpt4_en \
+    --finetuning_type lora \
+    --resume_lora_training False \
+    --checkpoint_dir path_to_sft_checkpoint \
+    --reward_model path_to_rm_checkpoint \
+    --output_dir path_to_ppo_checkpoint \
+    --per_device_train_batch_size 2 \
+    --gradient_accumulation_steps 4 \
+    --lr_scheduler_type cosine \
+    --logging_steps 10 \
+    --save_steps 1000 \
+    --learning_rate 1e-5 \
+    --num_train_epochs 1.0 \
+    --fp16
+```
+
+### Evaluation (BLEU and ROUGE_CHINESE)
+
+```bash
+CUDA_VISIBLE_DEVICES=0 python src/train_bash.py \
+    --stage sft \
+    --model_name_or_path path_to_your_chatglm_model \
+    --do_eval \
+    --dataset alpaca_gpt4_en \
+    --finetuning_type lora \
+    --checkpoint_dir path_to_checkpoint \
+    --output_dir path_to_eval_result \
+    --per_device_eval_batch_size 8 \
+    --max_samples 50 \
+    --predict_with_generate
+```
+
+### Predict
+
+```bash
+CUDA_VISIBLE_DEVICES=0 python src/train_bash.py \
+    --stage sft \
+    --model_name_or_path path_to_your_chatglm_model \
+    --do_predict \
+    --dataset alpaca_gpt4_en \
+    --finetuning_type lora \
+    --checkpoint_dir path_to_checkpoint \
+    --output_dir path_to_predict_result \
+    --per_device_eval_batch_size 8 \
+    --max_samples 100 \
+    --predict_with_generate
+```
+
+If you want to predict the samples with empty responses, please kindly fill the `response` column with **dummy tokens** to ensure the sample will not be discarded throughout the preprocessing phase.
+
+### API Demo
+
+```bash
+python src/api_demo.py \
+    --model_name_or_path path_to_your_chatglm_model \
+    --finetuning_type lora \
+    --checkpoint_dir path_to_checkpoint
+```
+
+Visit `http://localhost:8000/docs` for API documentation.
+
+### CLI Demo
+
+```bash
+python src/cli_demo.py \
+    --model_name_or_path path_to_your_chatglm_model \
+    --finetuning_type lora \
+    --checkpoint_dir path_to_checkpoint
+```
+
+### Web Demo
+
+```bash
+python src/web_demo.py \
+    --model_name_or_path path_to_your_chatglm_model \
+    --finetuning_type lora \
+    --checkpoint_dir path_to_checkpoint
+```
+
+### Export model
+
+```bash
+python src/export_model.py \
+    --model_name_or_path path_to_your_chatglm_model \
+    --finetuning_type lora \
+    --checkpoint_dir path_to_checkpoint \
+    --output_dir path_to_export
+```
+
+### Hardware Requirements
+
+| Fine-tune method | Batch size | Mode |  GRAM  | Speed |
+| ---------------- | ---------- | ---- | ------ | ----- |
+| LoRA (r=8)       |     16     | FP16 |  28GB  | 8ex/s |
+| LoRA (r=8)       |     8      | FP16 |  24GB  | 8ex/s |
+| LoRA (r=8)       |     4      | FP16 |  20GB  | 8ex/s |
+| LoRA (r=8)       |     4      | INT8 |  10GB  | 8ex/s |
+| LoRA (r=8)       |     4      | INT4 |   8GB  | 8ex/s |
+| P-Tuning (p=16)  |     4      | FP16 |  20GB  | 8ex/s |
+| P-Tuning (p=16)  |     4      | INT8 |  16GB  | 8ex/s |
+| P-Tuning (p=16)  |     4      | INT4 |  12GB  | 8ex/s |
+| Freeze (l=3)     |     4      | FP16 |  24GB  | 8ex/s |
+
+| RM  method       | Batch size | Mode |  GRAM  | Speed |
+| ---------------- | ---------- | ---- | ------ | ----- |
+| LoRA (r=8) + rm  |     4      | FP16 |  22GB  | -     |
+| LoRA (r=8) + rm  |     1      | INT8 |  11GB  | -     |
+
+| RLHF method      | Batch size | Mode |  GRAM  | Speed |
+| ---------------- | ---------- | ---- | ------ | ----- |
+| LoRA (r=8) + ppo |     4      | FP16 |  23GB  | -     |
+| LoRA (r=8) + ppo |     1      | INT8 |  12GB  | -     |
+
+> Note: `r` is the lora rank, `p` is the number of prefix tokens, `l` is the number of trainable layers, `ex/s` is the examples per second at training. The `gradient_accumulation_steps` is set to `1`. All are evaluated on a single Tesla V100 (32G) GPU, they are approximated values and may vary in different GPUs.
+
+## Fine-tuning ChatGLM: A Case
+
+### Training Results
+
+We use the whole `alpaca_gpt4_zh` dataset to fine-tune the ChatGLM model with LoRA (r=8) for one epoch, using the default hyper-parameters. The loss curve during training is presented below.
+
+![training loss](assets/trainer_state.jpg)
+
+### Evaluation Results
+
+We select 100 instances in the `alpaca_gpt4_zh` dataset to evaluate the fine-tuned ChatGLM model and compute the BLEU and ROUGE scores. The results are presented below.
+
+|   Score   | Original | FZ (l=2) | PT (p=16) | LoRA (r=8) |
+| --------- | -------- | ----- | ----- | ----------------- |
+| BLEU-4    |  15.75   | 16.85 | 16.06 | 17.01 (**+1.26**) |
+| Rouge-1   |  34.51   | 36.62 | 34.80 | 36.77 (**+2.26**) |
+| Rouge-2   |  15.11   | 17.04 | 15.32 | 16.83 (**+1.72**) |
+| Rouge-l   |  26.18   | 28.17 | 26.35 | 28.86 (**+2.68**) |
+| Params (%)|  /       | 4.35% | 0.06% | 0.06%             |
+
+> FZ: freeze tuning, PT: P-Tuning V2 (we use `pre_seq_len=16` for fair comparison with LoRA), Params: the percentange of trainable parameters.
+
+## Compared with Existing Implementations
+
+- [THUDM/ChatGLM-6B](https://github.com/THUDM/ChatGLM-6B/tree/main/ptuning)
+  - Official implementation of fine-tuning ChatGLM with [P-Tuning v2](https://github.com/THUDM/P-tuning-v2) on the [ADGEN](https://aclanthology.org/D19-1321.pdf) dataset.
+  - Our fine-tuning script is largely depend on it. We further implement the [LoRA](https://arxiv.org/abs/2106.09685) tuning method. Additionally, we **dynamically** pad the inputs to the longest sequence in the batch instead of the maximum length, to accelerate the fine-tuning.
+- [mymusise/ChatGLM-Tuning](https://github.com/mymusise/ChatGLM-Tuning)
+  - An unoffical implementation of fine-tuning ChatGLM with [LoRA](https://arxiv.org/abs/2106.09685) on the [Stanford Alpaca](https://github.com/tatsu-lab/stanford_alpaca) dataset.
+  - We borrowed some ideas from it. Our fine-tuning script **integrates** the data pre-processing part into the training procedure, so we need not generate a pre-processed dataset before training.
+- [ssbuild/chatglm_finetuning](https://github.com/ssbuild/chatglm_finetuning)
+  - An unofficial implementation of fine-tuning ChatGLM with several PEFT methods on the [Stanford Alpaca](https://github.com/tatsu-lab/stanford_alpaca) dataset.
+  - Our fine-tuning script is implemented **purely** with [Hugging Face transformers](https://github.com/huggingface/transformers) and is independent of the [deep_training](https://github.com/ssbuild/deep_training) framework.
+- [lich99/ChatGLM-finetune-LoRA](https://github.com/lich99/ChatGLM-finetune-LoRA)
+  - An unofficial implementation of fine-tuning ChatGLM with [LoRA](https://arxiv.org/abs/2106.09685) on the [Stanford Alpaca](https://github.com/tatsu-lab/stanford_alpaca) dataset.
+  - We use the [Hugging Face PEFT](https://github.com/huggingface/peft) to provide the state-of-the-art PEFT methods.
+- [liucongg/ChatGLM-Finetuning](https://github.com/liucongg/ChatGLM-Finetuning)
+  - An unofficial implementation of fine-tuning ChatGLM with several methods including Freeze, LoRA and P-Tuning on the industrial dataset.
+  - We are aim to incorporate more instruction-following datasets for fine-tuning the ChatGLM model.
+- [yanqiangmiffy/InstructGLM](https://github.com/yanqiangmiffy/InstructGLM)
+  - An unofficial implementation of fine-tuning ChatGLM that explores the ChatGLM's ability on the instruction-following datasets.
+  - Our fine-tuning script integrates the data pre-processing part in to the training procedure.
+
+## TODO
+
+- [ ] Employing [LangChain](https://github.com/hwchase17/langchain) to easily build applications that are capable of leveraging external knowledge upon fine-tuned ChatGLM models.
+- [ ] Implementing the alignment algorithms to align human preferrences.
+  - [x] [RLHF](https://github.com/microsoft/DeepSpeed/tree/master/blogs/deepspeed-chat)
+  - [ ] [RRHF](https://github.com/GanjinZero/RRHF)
+  - [ ] [RAFT](https://github.com/OptimalScale/LMFlow)
+- [ ] Incorporating [Chinese datasets](https://github.com/brightmart/nlp_chinese_corpus) into the training sets.
+  - [x] [BELLE](https://github.com/LianjiaTech/BELLE)
+  - [ ] [pCLUE](https://github.com/CLUEbenchmark/pCLUE)
+  - [ ] [CLUECorpus](https://github.com/CLUEbenchmark/CLUECorpus2020)
+  - [x] [GuanacoDataset](https://huggingface.co/datasets/JosephusCheung/GuanacoDataset)
+  - [x] [FireflyDataset](https://huggingface.co/datasets/YeungNLP/firefly-train-1.1M)
+- [ ] Incorporating [ChatGPT](https://openai.com/blog/chatgpt) & [GPT-4](https://openai.com/research/gpt-4) self-chat data into the training sets.
+  - [ ] [Baize](https://github.com/project-baize/baize-chatbot)
+  - [x] [GPT-4-LLM](https://github.com/Instruction-Tuning-with-GPT-4/GPT-4-LLM)
+- [x] Implementing the Freeze-Tuning and P-Tuning method.
+- [x] Supporting Multi-GPUs fine-tuning.
+- [x] Adding script for evaluation.
+- [x] Loading from checkpoint.
+- [x] Fine-tuning the quantized model.
+- [x] Writing a guidebook about how to fine-tune ChatGLM with this framework.
+- [ ] Combining with state-of-the-art model editing algorithms. (*e.g. [MEND](https://arxiv.org/abs/2110.11309)*)
+- [x] Incorporating the [OpenAssistant Conversations Dataset](https://huggingface.co/datasets/OpenAssistant/oasst1) for SFT and alignment.
+- [ ] Incorporating the high quality Chinese instruction dataset [COIG](https://huggingface.co/datasets/BAAI/COIG).
+
+## License
+
+This repository is licensed under the [Apache-2.0 License](LICENSE). Please follow the [Model License](https://github.com/THUDM/ChatGLM-6B/blob/main/MODEL_LICENSE) to use ChatGLM-6B model.
+
+## Citation
+
+If this work is helpful, please cite as:
+
+```bibtex
+@Misc{chatglm-efficient-tuning,
+  title = {ChatGLM Efficient Tuning},
+  author = {hiyouga},
+  howpublished = {\url{https://github.com/hiyouga/ChatGLM-Efficient-Tuning}},
+  year = {2023}
 }
 ```
 
-## 低成本部署
-### 模型量化
-默认情况下，模型以 FP16 精度加载，运行上述代码需要大概 13GB 显存。如果你的 GPU 显存有限，可以尝试以量化方式加载模型，使用方法如下：
+## Acknowledgement
 
-```python
-# 按需修改，目前只支持 4/8 bit 量化
-model = AutoModel.from_pretrained("THUDM/chatglm-6b", trust_remote_code=True).quantize(8).half().cuda()
-```
+This repo benefits from [ChatGLM-6B](https://github.com/THUDM/ChatGLM-6B), [ChatGLM-Tuning](https://github.com/mymusise/ChatGLM-Tuning) and [yuanzhoulvpi2017/zero_nlp](https://github.com/yuanzhoulvpi2017/zero_nlp). Thanks for their wonderful works.
 
-进行 2 至 3 轮对话后，8-bit 量化下 GPU 显存占用约为 10GB，4-bit 量化下仅需 6GB 占用。随着对话轮数的增多，对应消耗显存也随之增长，由于采用了相对位置编码，理论上 ChatGLM-6B 支持无限长的 context-length，但总长度超过 2048（训练长度）后性能会逐渐下降。
+## Star History
 
-模型量化会带来一定的性能损失，经过测试，ChatGLM-6B 在 4-bit 量化下仍然能够进行自然流畅的生成。使用 [GPT-Q](https://arxiv.org/abs/2210.17323) 等量化方案可以进一步压缩量化精度/提升相同量化精度下的模型性能，欢迎大家提出对应的 Pull Request。
-
-量化过程需要在内存中首先加载 FP16 格式的模型，消耗大概 13GB 的内存。如果你的内存不足的话，可以直接加载量化后的模型，INT4 量化后的模型仅需大概 5.2GB 的内存：
-```python
-# INT8 量化的模型将"THUDM/chatglm-6b-int4"改为"THUDM/chatglm-6b-int8"
-model = AutoModel.from_pretrained("THUDM/chatglm-6b-int4", trust_remote_code=True).half().cuda()
-```
-量化模型的参数文件也可以从[这里](https://cloud.tsinghua.edu.cn/d/674208019e314311ab5c/)手动下载。
-
-### CPU 部署
-如果你没有 GPU 硬件的话，也可以在 CPU 上进行推理，但是推理速度会更慢。使用方法如下（需要大概 32GB 内存）
-```python
-model = AutoModel.from_pretrained("THUDM/chatglm-6b", trust_remote_code=True).float()
-```
-
-如果你的内存不足，可以直接加载量化后的模型：
-```python
-# INT8 量化的模型将"THUDM/chatglm-6b-int4"改为"THUDM/chatglm-6b-int8"
-model = AutoModel.from_pretrained("THUDM/chatglm-6b-int4",trust_remote_code=True).float()
-```
-
-如果遇到了报错 `Could not find module 'nvcuda.dll'` 或者 `RuntimeError: Unknown platform: darwin` (MacOS) ，请[从本地加载模型](README.md#从本地加载模型)
-
-### Mac 部署
-对于搭载了 Apple Silicon 或者 AMD GPU 的Mac，可以使用 MPS 后端来在 GPU 上运行 ChatGLM-6B。需要参考 Apple 的 [官方说明](https://developer.apple.com/metal/pytorch) 安装 PyTorch-Nightly（正确的版本号应该是2.1.0.dev2023xxxx，而不是2.0.0）。
-
-目前在 MacOS 上只支持[从本地加载模型](README.md#从本地加载模型)。将代码中的模型加载改为从本地加载，并使用 mps 后端：
-```python
-model = AutoModel.from_pretrained("your local path", trust_remote_code=True).half().to('mps')
-```
-
-加载半精度的 ChatGLM-6B 模型需要大概 13GB 内存。内存较小的机器（比如 16GB 内存的 MacBook Pro），在空余内存不足的情况下会使用硬盘上的虚拟内存，导致推理速度严重变慢。此时可以使用量化后的模型如 chatglm-6b-int4。因为 GPU 上量化的 kernel 是使用 CUDA 编写的，因此无法在 MacOS 上使用，只能使用 CPU 进行推理。
-```python
-# INT8 量化的模型将"THUDM/chatglm-6b-int4"改为"THUDM/chatglm-6b-int8"
-model = AutoModel.from_pretrained("THUDM/chatglm-6b-int4",trust_remote_code=True).float()
-```
-为了充分使用 CPU 并行，还需要[单独安装 OpenMP](FAQ.md#q1)。
-
-### 多卡部署
-如果你有多张 GPU，但是每张 GPU 的显存大小都不足以容纳完整的模型，那么可以将模型切分在多张GPU上。首先安装 accelerate: `pip install accelerate`，然后通过如下方法加载模型：
-```python
-from utils import load_model_on_gpus
-model = load_model_on_gpus("THUDM/chatglm-6b", num_gpus=2)
-```
-即可将模型部署到两张 GPU 上进行推理。你可以将 `num_gpus` 改为你希望使用的 GPU 数。默认是均匀切分的，你也可以传入 `device_map` 参数来自己指定。 
-
-## 高效参数微调
-基于 [P-tuning v2](https://github.com/THUDM/P-tuning-v2) 的高效参数微调。具体使用方法详见 [ptuning/README.md](ptuning/README.md)。
-
-## ChatGLM-6B 示例
-
-以下是一些使用 `web_demo.py` 得到的示例截图。更多 ChatGLM-6B 的可能，等待你来探索发现！
-
-<details><summary><b>自我认知</b></summary>
-
-![](examples/self-introduction.png)
-
-</details>
-
-<details><summary><b>提纲写作</b></summary>
-
-![](examples/blog-outline.png)
-
-</details>
-
-<details><summary><b>文案写作</b></summary>
-
-![](examples/ad-writing-2.png)
-
-![](examples/comments-writing.png)
-
-</details>
-
-<details><summary><b>邮件写作助手</b></summary>
-
-![](examples/email-writing-1.png)
-
-![](examples/email-writing-2.png)
-
-</details>
-
-<details><summary><b>信息抽取</b></summary>
-
-![](examples/information-extraction.png)
-
-</details>
-
-<details><summary><b>角色扮演</b></summary>
-
-![](examples/role-play.png)
-
-</details>
-
-<details><summary><b>评论比较</b></summary>
-
-![](examples/sport.png)
-
-</details>
-
-<details><summary><b>旅游向导</b></summary>
-
-![](examples/tour-guide.png)
-
-</details>
-
-## 局限性
-
-由于 ChatGLM-6B 的小规模，其能力仍然有许多局限性。以下是我们目前发现的一些问题：
-
-- 模型容量较小：6B 的小容量，决定了其相对较弱的模型记忆和语言能力。在面对许多事实性知识任务时，ChatGLM-6B 可能会生成不正确的信息；它也不擅长逻辑类问题（如数学、编程）的解答。
-    <details><summary><b>点击查看例子</b></summary>
-    
-    ![](limitations/factual_error.png)
-    
-    ![](limitations/math_error.png)
-    
-    </details>
-  
-- 产生有害说明或有偏见的内容：ChatGLM-6B 只是一个初步与人类意图对齐的语言模型，可能会生成有害、有偏见的内容。（内容可能具有冒犯性，此处不展示）
-
-- 英文能力不足：ChatGLM-6B 训练时使用的指示/回答大部分都是中文的，仅有极小一部分英文内容。因此，如果输入英文指示，回复的质量远不如中文，甚至与中文指示下的内容矛盾，并且出现中英夹杂的情况。
-
-- 易被误导，对话能力较弱：ChatGLM-6B 对话能力还比较弱，而且 “自我认知” 存在问题，并很容易被误导并产生错误的言论。例如当前版本的模型在被误导的情况下，会在自我认知上发生偏差。
-    <details><summary><b>点击查看例子</b></summary>
-
-    ![](limitations/self-confusion_google.jpg)
-    
-    ![](limitations/self-confusion_openai.jpg)
-    
-    ![](limitations/self-confusion_tencent.jpg)
-    
-    </details>
-
-## 协议
-
-本仓库的代码依照 [Apache-2.0](LICENSE) 协议开源，ChatGLM-6B 模型的权重的使用则需要遵循 [Model License](MODEL_LICENSE)。
-
-## 引用
-
-如果你觉得我们的工作有帮助的话，请考虑引用下列论文
-
-```
-@article{zeng2022glm,
-  title={Glm-130b: An open bilingual pre-trained model},
-  author={Zeng, Aohan and Liu, Xiao and Du, Zhengxiao and Wang, Zihan and Lai, Hanyu and Ding, Ming and Yang, Zhuoyi and Xu, Yifan and Zheng, Wendi and Xia, Xiao and others},
-  journal={arXiv preprint arXiv:2210.02414},
-  year={2022}
-}
-```
-```
-@inproceedings{du2022glm,
-  title={GLM: General Language Model Pretraining with Autoregressive Blank Infilling},
-  author={Du, Zhengxiao and Qian, Yujie and Liu, Xiao and Ding, Ming and Qiu, Jiezhong and Yang, Zhilin and Tang, Jie},
-  booktitle={Proceedings of the 60th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)},
-  pages={320--335},
-  year={2022}
-}
-```
+![Star History Chart](https://api.star-history.com/svg?repos=hiyouga/ChatGLM-Efficient-Tuning&type=Date)

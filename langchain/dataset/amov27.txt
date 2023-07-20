@@ -1,0 +1,2 @@
+二十七、PX4参数含义查询
+可以到PX4官方的参数对照表中查询对应参数的定义：https://dev.px4.io/v1.11_noredirect/zh/advanced/parameter_reference.html?q=

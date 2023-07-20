@@ -1,4 +1,5 @@
-CUDA_VISIBLE_DEVICES=0 ../python src/train_rm.py \
+CUDA_VISIBLE_DEVICES=0 python ../src/train_bash.py \
+    --stage rm \
     --model_name_or_path /home/amov/LLaMA-Efficient-Tuning/model/bloom \
     --do_train \
     --dataset alpaca_gpt4_en \

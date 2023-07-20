@@ -1,0 +1,5 @@
+三十七、QGroundControl地面站在Windows下的UI 渲染/视频驱动程序问题
+如果您在 Windows 上遇到 UI 渲染问题或视频驱动程序崩溃，这可能是由“不稳定”的 OpenGL 驱动程序引起的。QGroundControl提供了 3 个快捷方式，您可以使用它们在“更安全”的视频模式下启动QGroundControl（按顺序尝试）：
+QGroundControl： QGC 直接使用 OpenGL 图形驱动程序。
+GPU 兼容模式： QGC 使用 ANGLE 驱动程序，它在 DirectX 之上实现 OpenGL。
+GPU 安全模式： QGC 为 UI 使用软件光栅器（这非常慢）。

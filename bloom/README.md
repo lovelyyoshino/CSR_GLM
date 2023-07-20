@@ -1,25 +1,45 @@
 # LLaMA Efficient Tuning
 
-![GitHub Repo stars](https://img.shields.io/github/stars/hiyouga/LLaMA-Efficient-Tuning?style=social)
-![GitHub Code License](https://img.shields.io/github/license/hiyouga/LLaMA-Efficient-Tuning)
-![GitHub last commit](https://img.shields.io/github/last-commit/hiyouga/LLaMA-Efficient-Tuning)
-![GitHub pull request](https://img.shields.io/badge/PRs-welcome-blue)
+[![GitHub Repo stars](https://img.shields.io/github/stars/hiyouga/LLaMA-Efficient-Tuning?style=social)](https://github.com/hiyouga/LLaMA-Efficient-Tuning/stargazers)
+[![GitHub Code License](https://img.shields.io/github/license/hiyouga/LLaMA-Efficient-Tuning)](LICENSE)
+[![GitHub last commit](https://img.shields.io/github/last-commit/hiyouga/LLaMA-Efficient-Tuning)](https://github.com/hiyouga/LLaMA-Efficient-Tuning/commits/main)
+[![PyPI](https://img.shields.io/pypi/v/llmtuner)](https://pypi.org/project/llmtuner/)
+[![GitHub pull request](https://img.shields.io/badge/PRs-welcome-blue)](https://github.com/hiyouga/LLaMA-Efficient-Tuning/pulls)
 
 👋 Join our [WeChat](assets/wechat.jpg).
 
 ## Changelog
 
-[23/06/15] Now we support training the baichuan-7B model in this repo. Try `--model_name_or_path baichuan-inc/baichuan-7B` argument to use the baichuan-7B model.
+[23/07/19] Now we support training the **LLaMA-2** models in this repo. Try `--model_name_or_path meta-llama/Llama-2-7b-hf` argument to use the LLaMA-2 model. Remember to use `--prompt_template llama2` argument when you are using the LLaMA-2-chat model.
 
-[23/06/03] Now we support quantized training and inference (aka [QLoRA](https://github.com/artidoro/qlora)). Try `--quantization_bit 4/8` argument to work with quantized model. (experimental feature)
+[23/07/18] Now we develop an all-in-one Web UI for training, evaluation and inference. Try `train_web.py` to fine-tune models in your Web browser. Thank [@KanadeSiina](https://github.com/KanadeSiina) and [@codemayq](https://github.com/codemayq) for their efforts in the development.
 
-[23/05/31] Now we support training the BLOOM & BLOOMZ models in this repo. Try `--model_name_or_path bigscience/bloomz-7b1-mt` argument to use the BLOOMZ model.
+[23/07/11] Now we support training the **Baichuan-13B** model in this repo. Please replace the Baichuan-13B model file with `tests/modeling_baichuan.py` and try `--model_name_or_path path_to_baichuan_model` and `--lora_target W_pack` arguments to train the Baichuan-13B model. Remember to use `--prompt_template baichuan` argument when you are using the Baichuan-13B-Chat model.
+
+[23/07/09] Now we release [FastEdit](https://github.com/hiyouga/FastEdit)⚡🩹, an easy-to-use package for editing the factual knowledge of large language models efficiently. Please follow [FastEdit](https://github.com/hiyouga/FastEdit) if you are interested.
+
+[23/07/07] Now we support training the **InternLM-7B** model in this repo. Try `--model_name_or_path internlm/internlm-7b` argument to use the InternLM model. Remember to use `--prompt_template intern` argument when you are using the InternLM-chat model.
+
+[23/07/05] Now we support training the **Falcon-7B/40B** models in this repo. Try `--model_name_or_path tiiuae/falcon-7b` and `--lora_target query_key_value` arguments to use the Falcon model.
+
+[23/06/29] We provide a **reproducible example** of training a chat model using instruction-following datasets, see this [Hugging Face Repo](https://huggingface.co/hiyouga/baichuan-7b-sft) for details.
+
+[23/06/22] Now we align the [demo API](src/api_demo.py) with the [OpenAI's](https://platform.openai.com/docs/api-reference/chat) format where you can insert the fine-tuned model in **arbitrary ChatGPT-based applications**.
+
+[23/06/15] Now we support training the **Baichuan-7B** model in this repo. Try `--model_name_or_path baichuan-inc/Baichuan-7B` and `--lora_target W_pack` arguments to use the Baichuan-7B model.
+
+[23/06/03] Now we support quantized training and inference (aka **[QLoRA](https://github.com/artidoro/qlora)**). Try `--quantization_bit 4/8` argument to work with quantized model. (experimental feature)
+
+[23/05/31] Now we support training the **BLOOM & BLOOMZ** models in this repo. Try `--model_name_or_path bigscience/bloomz-7b1-mt` and `--lora_target query_key_value` arguments to use the BLOOMZ model.
 
 ## Supported Models
 
 - [LLaMA](https://github.com/facebookresearch/llama) (7B/13B/33B/65B)
+- [LLaMA-2](https://huggingface.co/meta-llama) (7B/13B/70B)
 - [BLOOM](https://huggingface.co/bigscience/bloom) & [BLOOMZ](https://huggingface.co/bigscience/bloomz) (560M/1.1B/1.7B/3B/7.1B/176B)
-- [baichuan](https://huggingface.co/baichuan-inc/baichuan-7B) (7B)
+- [Falcon](https://huggingface.co/tiiuae/falcon-7b) (7B/40B)
+- [Baichuan](https://huggingface.co/baichuan-inc/baichuan-7B) (7B/13B)
+- [InternLM](https://github.com/InternLM/InternLM) (7B)
 
 ## Supported Training Approaches
 
@@ -40,31 +60,36 @@
 ## Provided Datasets
 
 - For pre-training:
-  - [Wiki Demo](data/wiki_demo.txt)
+  - [Wiki Demo (en)](data/wiki_demo.txt)
 - For supervised fine-tuning:
-  - [Stanford Alpaca](https://github.com/tatsu-lab/stanford_alpaca)
-  - [Stanford Alpaca (Chinese)](https://github.com/ymcui/Chinese-LLaMA-Alpaca)
-  - [GPT-4 Generated Data](https://github.com/Instruction-Tuning-with-GPT-4/GPT-4-LLM)
-  - [BELLE 2M](https://huggingface.co/datasets/BelleGroup/train_2M_CN)
-  - [BELLE 1M](https://huggingface.co/datasets/BelleGroup/train_1M_CN)
-  - [BELLE 0.5M](https://huggingface.co/datasets/BelleGroup/train_0.5M_CN)
-  - [BELLE Dialogue 0.4M](https://huggingface.co/datasets/BelleGroup/generated_chat_0.4M)
-  - [BELLE School Math 0.25M](https://huggingface.co/datasets/BelleGroup/school_math_0.25M)
-  - [BELLE Multiturn Chat 0.8M](https://huggingface.co/datasets/BelleGroup/multiturn_chat_0.8M)
-  - [Guanaco Dataset](https://huggingface.co/datasets/JosephusCheung/GuanacoDataset)
-  - [Firefly 1.1M](https://huggingface.co/datasets/YeungNLP/firefly-train-1.1M)
-  - [CodeAlpaca 20k](https://huggingface.co/datasets/sahil2801/CodeAlpaca-20k)
-  - [Alpaca CoT](https://huggingface.co/datasets/QingyiSi/Alpaca-CoT)
-  - [Web QA (Chinese)](https://huggingface.co/datasets/suolyer/webqa)
-  - [UltraChat](https://github.com/thunlp/UltraChat)
-- For reward model training:
-  - [HH-RLHF](https://huggingface.co/datasets/Anthropic/hh-rlhf)
-  - [GPT-4 Generated Data](https://github.com/Instruction-Tuning-with-GPT-4/GPT-4-LLM)
-  - [GPT-4 Generated Data (Chinese)](https://github.com/Instruction-Tuning-with-GPT-4/GPT-4-LLM)
+  - [Stanford Alpaca (en)](https://github.com/tatsu-lab/stanford_alpaca)
+  - [Stanford Alpaca (zh)](https://github.com/ymcui/Chinese-LLaMA-Alpaca)
+  - [GPT-4 Generated Data (en&zh)](https://github.com/Instruction-Tuning-with-GPT-4/GPT-4-LLM)
+  - [Open Assistant (multilingual)](https://huggingface.co/datasets/OpenAssistant/oasst1)
+  - [Self-cognition (zh)](data/self_cognition.json)
+  - [ShareGPT (zh)](https://huggingface.co/datasets/QingyiSi/Alpaca-CoT/tree/main/Chinese-instruction-collection)
+  - [RefGPT (zh)](https://github.com/sufengniu/RefGPT)
+  - [Guanaco Dataset (multilingual)](https://huggingface.co/datasets/JosephusCheung/GuanacoDataset)
+  - [BELLE 2M (zh)](https://huggingface.co/datasets/BelleGroup/train_2M_CN)
+  - [BELLE 1M (zh)](https://huggingface.co/datasets/BelleGroup/train_1M_CN)
+  - [BELLE 0.5M (zh)](https://huggingface.co/datasets/BelleGroup/train_0.5M_CN)
+  - [BELLE Dialogue 0.4M (zh)](https://huggingface.co/datasets/BelleGroup/generated_chat_0.4M)
+  - [BELLE School Math 0.25M (zh)](https://huggingface.co/datasets/BelleGroup/school_math_0.25M)
+  - [BELLE Multiturn Chat 0.8M (zh)](https://huggingface.co/datasets/BelleGroup/multiturn_chat_0.8M)
+  - [Firefly 1.1M (zh)](https://huggingface.co/datasets/YeungNLP/firefly-train-1.1M)
+  - [CodeAlpaca 20k (en)](https://huggingface.co/datasets/sahil2801/CodeAlpaca-20k)
+  - [Alpaca CoT (multilingual)](https://huggingface.co/datasets/QingyiSi/Alpaca-CoT)
+  - [Web QA (zh)](https://huggingface.co/datasets/suolyer/webqa)
+  - [UltraChat (en)](https://github.com/thunlp/UltraChat)
+  - [WebNovel (zh)](https://huggingface.co/datasets/zxbsmk/webnovel_cn)
+- For reward modelling:
+  - [HH-RLHF (en)](https://huggingface.co/datasets/Anthropic/hh-rlhf)
+  - [Open Assistant (multilingual)](https://huggingface.co/datasets/OpenAssistant/oasst1)
+  - [GPT-4 Generated Data (en&zh)](https://github.com/Instruction-Tuning-with-GPT-4/GPT-4-LLM)
 
 Please refer to [data/README.md](data/README.md) for details.
 
-Some datasets require confirmation before using them, so we recommend logging in with your HuggingFace account using these commands.
+Some datasets require confirmation before using them, so we recommend logging in with your Hugging Face account using these commands.
 
 ```bash
 pip install --upgrade huggingface_hub
@@ -75,11 +100,17 @@ huggingface-cli login
 
 - Python 3.8+ and PyTorch 1.13.1+
 - 🤗Transformers, Datasets, Accelerate, PEFT and TRL
-- protobuf, cpm_kernels and sentencepiece
-- jieba, rouge_chinese and nltk (used at evaluation)
-- gradio and mdtex2html (used in web_demo.py)
+- jieba, rouge-chinese and nltk (used at evaluation)
+- gradio and matplotlib (used in web_demo.py)
+- uvicorn, fastapi and sse-starlette (used in api_demo.py)
 
 And **powerful GPUs**!
+
+If you want to enable quantized LoRA (QLoRA) on the Windows platform, you should install a pre-built version of `bitsandbytes` library, which supports CUDA 11.1 to 12.1.
+
+```bash
+pip install https://github.com/jllllll/bitsandbytes-windows-webui/releases/download/wheels/bitsandbytes-0.39.1-py3-none-win_amd64.whl
+```
 
 ## Getting Started
 
@@ -99,20 +130,17 @@ cd LLaMA-Efficient-Tuning
 pip install -r requirements.txt
 ```
 
-### LLaMA Weights Preparation
-
-1. Download the weights of the LLaMA models.
-2. Convert them to HF format using the following command.
+### All-in-one Web UI
 
 ```bash
-python -m transformers.models.llama.convert_llama_weights_to_hf \
-    --input_dir path_to_llama_weights --model_size 7B --output_dir path_to_llama_model
+python src/train_web.py
 ```
 
 ### (Continually) Pre-Training
 
 ```bash
-CUDA_VISIBLE_DEVICES=0 python src/train_pt.py \
+CUDA_VISIBLE_DEVICES=0 python src/train_bash.py \
+    --stage pt \
     --model_name_or_path path_to_your_model \
     --do_train \
     --dataset wiki_demo \
@@ -133,7 +161,8 @@ CUDA_VISIBLE_DEVICES=0 python src/train_pt.py \
 ### Supervised Fine-Tuning
 
 ```bash
-CUDA_VISIBLE_DEVICES=0 python src/train_sft.py \
+CUDA_VISIBLE_DEVICES=0 python src/train_bash.py \
+    --stage sft \
     --model_name_or_path path_to_your_model \
     --do_train \
     --dataset alpaca_gpt4_en \
@@ -154,7 +183,8 @@ CUDA_VISIBLE_DEVICES=0 python src/train_sft.py \
 ### Reward Model Training
 
 ```bash
-CUDA_VISIBLE_DEVICES=0 python src/train_rm.py \
+CUDA_VISIBLE_DEVICES=0 python src/train_bash.py \
+    --stage rm \
     --model_name_or_path path_to_your_model \
     --do_train \
     --dataset comparison_gpt4_en \
@@ -174,7 +204,8 @@ CUDA_VISIBLE_DEVICES=0 python src/train_rm.py \
 ### PPO Training (RLHF)
 
 ```bash
-CUDA_VISIBLE_DEVICES=0 python src/train_ppo.py \
+CUDA_VISIBLE_DEVICES=0 python src/train_bash.py \
+    --stage ppo \
     --model_name_or_path path_to_your_model \
     --do_train \
     --dataset alpaca_gpt4_en \
@@ -197,37 +228,99 @@ CUDA_VISIBLE_DEVICES=0 python src/train_ppo.py \
 
 ```bash
 accelerate config # configure the environment
-accelerate launch src/train_XX.py # arguments (same as above)
+accelerate launch src/train_bash.py # arguments (same as above)
 ```
+
+<details><summary>Example configuration for full-tuning with DeepSpeed ZeRO-2</summary>
+
+```yaml
+compute_environment: LOCAL_MACHINE
+deepspeed_config:
+  gradient_accumulation_steps: 4
+  gradient_clipping: 0.5
+  offload_optimizer_device: none
+  offload_param_device: none
+  zero3_init_flag: false
+  zero_stage: 2
+distributed_type: DEEPSPEED
+downcast_bf16: 'no'
+machine_rank: 0
+main_training_function: main
+mixed_precision: fp16
+num_machines: 1
+num_processes: 4
+rdzv_backend: static
+same_network: true
+tpu_env: []
+tpu_use_cluster: false
+tpu_use_sudo: false
+use_cpu: false
+```
+
+</details>
 
 ### Evaluation (BLEU and ROUGE_CHINESE)
 
 ```bash
-CUDA_VISIBLE_DEVICES=0 python src/train_sft.py \
+CUDA_VISIBLE_DEVICES=0 python src/train_bash.py \
+    --stage sft \
     --model_name_or_path path_to_your_model \
     --do_eval \
     --dataset alpaca_gpt4_en \
+    --finetuning_type lora \
     --checkpoint_dir path_to_checkpoint \
     --output_dir path_to_eval_result \
     --per_device_eval_batch_size 8 \
-    --max_samples 50 \
+    --max_samples 100 \
     --predict_with_generate
 ```
 
 We recommend using `--per_device_eval_batch_size=1` and `--max_target_length 128` at 4/8-bit evaluation.
+
+### Predict
+
+```bash
+CUDA_VISIBLE_DEVICES=0 python src/train_bash.py \
+    --stage sft \
+    --model_name_or_path path_to_your_model \
+    --do_predict \
+    --dataset alpaca_gpt4_en \
+    --finetuning_type lora \
+    --checkpoint_dir path_to_checkpoint \
+    --output_dir path_to_predict_result \
+    --per_device_eval_batch_size 8 \
+    --max_samples 100 \
+    --predict_with_generate
+```
+
+If you want to predict the samples with empty responses, please kindly fill the `response` column with **dummy tokens** to ensure the sample will not be discarded throughout the preprocessing phase.
+
+### API Demo
+
+```bash
+python src/api_demo.py \
+    --model_name_or_path path_to_your_model \
+    --finetuning_type lora \
+    --checkpoint_dir path_to_checkpoint
+```
+
+Visit `http://localhost:8000/docs` for API documentation.
 
 ### CLI Demo
 
 ```bash
 python src/cli_demo.py \
     --model_name_or_path path_to_your_model \
+    --finetuning_type lora \
     --checkpoint_dir path_to_checkpoint
 ```
 
 ### Web Demo
+
 ```bash
 python src/web_demo.py \
     --model_name_or_path path_to_your_model \
+    --finetuning_type lora \
     --checkpoint_dir path_to_checkpoint
 ```
 
@@ -236,6 +329,7 @@ python src/web_demo.py \
 ```bash
 python src/export_model.py \
     --model_name_or_path path_to_your_model \
+    --finetuning_type lora \
     --checkpoint_dir path_to_checkpoint \
     --output_dir path_to_export
 ```
@@ -244,15 +338,18 @@ python src/export_model.py \
 
 This repository is licensed under the [Apache-2.0 License](LICENSE).
 
-Please follow the [Model Card](https://github.com/facebookresearch/llama/blob/main/MODEL_CARD.md) to use the LLaMA models.
+Please follow the model licenses to use the corresponding model weights:
 
-Please follow the [RAIL License](https://huggingface.co/spaces/bigscience/license) to use the BLOOM & BLOOMZ models.
-
-Please follow the [baichuan-7B License](https://huggingface.co/baichuan-inc/baichuan-7B/resolve/main/baichuan-7B%20%E6%A8%A1%E5%9E%8B%E8%AE%B8%E5%8F%AF%E5%8D%8F%E8%AE%AE.pdf) to use the baichuan-7B model.
+- [LLaMA](https://github.com/facebookresearch/llama/blob/main/MODEL_CARD.md)
+- [LLaMA-2](https://ai.meta.com/llama/license/)
+- [BLOOM](https://huggingface.co/spaces/bigscience/license)
+- [Falcon](LICENSE)
+- [baichuan](https://huggingface.co/baichuan-inc/baichuan-7B/resolve/main/baichuan-7B%20%E6%A8%A1%E5%9E%8B%E8%AE%B8%E5%8F%AF%E5%8D%8F%E8%AE%AE.pdf)
+- [InternLM](https://github.com/InternLM/InternLM#open-source-license)
 
 ## Citation
 
-If this work is helpful, please cite as:
+If this work is helpful, please kindly cite as:
 
 ```bibtex
 @Misc{llama-efficient-tuning,
@@ -266,3 +363,7 @@ If this work is helpful, please cite as:
 ## Acknowledgement
 
 This repo is a sibling of [ChatGLM-Efficient-Tuning](https://github.com/hiyouga/ChatGLM-Efficient-Tuning). They share a similar code structure of efficient tuning on large language models.
+
+## Star History
+
+![Star History Chart](https://api.star-history.com/svg?repos=hiyouga/LLaMA-Efficient-Tuning&type=Date)

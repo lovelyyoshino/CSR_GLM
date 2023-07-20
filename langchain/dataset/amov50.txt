@@ -1,0 +1,2 @@
+五十、请问一下这个 SET_POSITION_TARGET_LOCAL_NED coordinate frame 0 unsupported 报错是什么原因？
+因为换了飞控 固件，建议使用出厂固件，不建议换固件。

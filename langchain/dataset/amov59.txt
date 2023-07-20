@@ -1,0 +1,67 @@
+五十九、PX4飞行前传感器/估算器检查/QGC报错/解锁报错
+PX4 执行很多飞行前传感器质量和估算器检查，以确定是否有足够好的位置估计来解锁和驾驶飞行器（这些检查由 COM*ARM* 参数控制）。
+任何飞行前错误都会在QGroundControl中报告为PREFLIGHT FAIL消息。 
+在日志中的estimator_status.gps_check_fail_flags消息还显示了 GPS 质量检查失败。
+EKF 飞行前检查 / 错误
+什么是ECL EKF？
+估计和控制库（ECL）使用扩展卡尔曼滤波器（EKF）算法来处理传感器测量并提供以下状态的估计值：
+
+四元数定义了从北，东，下局部土框架到X，Y，Z体框架的旋转
+IMU的速度-北，东，下（m / s）
+在IMU上的位置-北，东，下（m）
+IMU增量角度偏差估算-X，Y，Z（弧度）
+IMU增量速度偏差估算-X，Y，Z（m / s）
+地磁场分量-北，东，下（高斯）
+车身框架磁场偏置-X，Y，Z（高斯）
+风速-北，东（m / s）
+EKF在延迟的“融合时间范围”上运行，以允许每次测量相对于IMU的不同时间延迟。每个传感器的数据都被FIFO缓冲并由EKF从缓冲区中检索出来，以便在正确的时间使用。每个传感器的延迟补偿由EKF2 _ * _ DELAY参数控制。
+补充滤波器用于使用缓冲的IMU数据将状态从“融合时间范围”传播到当前时间。该滤波器的时间常数由EKF2_TAU_VEL和EKF2_TAU_POS参数控制。
+EFK报道的下面的这些错误（相关的检查和参数）同时会传入到QGC中：
+PREFLIGHT FAIL: EKF HGT ERROR：
+当 IMU 和高度测量数据不一致时会产生此错误。
+执行加速度计和陀螺仪校准并重新启动飞行器。 如果错误仍然存在，请检查高度传感器数据是否存在问题。
+检查由COM_ARM_EKF_HGT参数控制。
+PREFLIGHT FAIL: EKF VEL ERROR:
+当 IMU 和 GPS 速度测量数据不一致时会产生此错误。
+检查 GPS 速度数据是否存在不真实的数据跳转。 如果 GPS 质量看起来没有问题，请执行加速度计和陀螺仪校准并重新启动飞行器。
+检查由COM_ARM_EKF_VEL参数控制。
+PREFLIGHT FAIL: EKF HORIZ POS ERROR:
+当 IMU 和位置测量数据（GPS 或外部视觉）不一致时会产生此问题。
+检查位置传感器数据是否存在不真实的数据跳转。 如果数据质量看起来不错，请执行加速度计和陀螺仪校准并重新启动飞行器。
+检查由COM_ARM_EKF_POS参数控制。
+PREFLIGHT FAIL: EKF YAW ERROR:
+当使用陀螺仪数据估计的偏航角和来自磁力计或外部视觉系统的偏航角不一致时，产生该误差。
+检查 IMU 数据是否存在较大的偏航率漂洗，并检查磁力计的对准和校准。
+检查由 COM_ARM_EKF_YAW 参数控制
+默认值0.5允许导航偏航角和磁偏航角（磁力计或外部视觉）之间的差异不超过EKF所允许的最大值的50％，并且为飞行开始时的误差增加提供了一定的余量。
+如果偏航陀螺仪具有较大的偏移量，或者如果车辆在磁干扰或磁力计校准不良的情况下移动或旋转，则可能会失败。
+PREFLIGHT FAIL: EKF HIGH IMU ACCEL BIAS:
+当 EKF 估计的 IMU 加速度计偏差过大时，会产生此错误。
+检查由COM_ARM_EKF_AB参数控制。
+PREFLIGHT FAIL: EKF HIGH IMU GYRO BIAS:
+当由 EKF 估计的 IMU 陀螺仪偏差过大时会产生该错误。
+检查由COM_ARM_EKF_GB参数控制。
+PREFLIGHT FAIL: ACCEL SENSORS INCONSISTENT - CHECK CALIBRATION:
+当来自不同 IMU 单元的加速度测量值不一致时，会产生此错误消息。
+此检查仅适用于具有多个 IMU 的板。
+检查由COM_ARM_IMU_ACC参数控制。
+PREFLIGHT FAIL: GYRO SENSORS INCONSISTENT - CHECK CALIBRATION:
+当来自不同 IMU 单元的角速率测量值不一致时，会产生此错误消息。
+此检查仅适用于具有多个 IMU 的板。
+检查由COM_ARM_IMU_GYR参数控制。
+PREFLIGHT FAIL: COMPASS SENSORS INCONSISTENT - CHECK CALIBRATION:
+当来自不同指南针传感器的测量值差异太大时，会产生此错误消息。
+这表明校准，定向或电磁干扰不良。
+该检查仅适用于连接了多个指南针/磁力计的情况。
+检查由 COM_ARM_MAG_ANG 参数控制
+PREFLIGHT FAIL: EKF INTERNAL CHECKS:
+如果水平GPS速度、磁偏航、垂直GPS速度或垂直位置传感器(默认为Baro，但如果使用非标准参数，可能是测距仪或GPS)的创新幅度过大，则会产生此错误信息。创新之处在于由惯性导航计算预测的数值与由传感器测量的数值之间的差异。
+用户应检查日志文件中的创新级别以确定原因。 这些可以在ekf2_innovations消息下找到。 常见问题/解决方案包括：
+IMU在预热时漂移。 可以通过重新启动自动驾驶仪来解决。 可能需要IMU加速和陀螺仪校准。
+邻近的磁干扰与车辆运动相结合。解决我的移动车辆，等待或重新供电。
+磁力计校准不正确并伴有车辆运动。 通过重新校准解决。
+启动时的初始冲击或快速移动导致了不良惯性导航解决方案。解决方法是重新启动车辆，在前5秒尽量减少移动。
+其他参数
+以下参数也会影响飞行前检查
+COM_ARM_WO_GPS
+COM_ARM_WO_GPS参数控制在没有全局位置估计的情况下是否允许解锁

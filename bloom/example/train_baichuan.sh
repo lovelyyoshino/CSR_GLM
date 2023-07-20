@@ -1,10 +1,10 @@
-accelerate launch ../src/train_sft.py \
+CUDA_VISIBLE_DEVICES=0 python ../src/train_bash.py \
+    --stage sft \
     --model_name_or_path /home/amov/LLaMA-Efficient-Tuning/model/baichuan \
     --do_train \
     --dataset_dir ../data \
     --dataset alpaca_gpt4_en \
     --finetuning_type lora \
-    --checkpoint_dir /home/amov/LLaMA-Efficient-Tuning/output/pt \
     --output_dir /home/amov/LLaMA-Efficient-Tuning/output/sft \
     --overwrite_cache \
     --per_device_train_batch_size 1 \
@@ -12,6 +12,7 @@ accelerate launch ../src/train_sft.py \
     --lr_scheduler_type cosine \
     --logging_steps 10 \
     --save_steps 1000 \
+    --prompt_template baichuan \
     --learning_rate 5e-5 \
     --num_train_epochs 3.0 \
     --resume_lora_training False \

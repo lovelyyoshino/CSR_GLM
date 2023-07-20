@@ -1,0 +1,10 @@
+三十八、QGroundControl在Ubuntu上视频流式传输失败（缺少 Gstreamer）
+在 Ubuntu 上，您必须安装Gstreamer组件才能观看视频流。如果未安装这些，QGroundControl将无法创建 gstreamer 节点并失败：
+VideoReceiver::start() failed. Error with gst_element_factory_make(‘avdec_h264’)
+Ubuntu 的下载/安装说明包括GStreamer设置信息：
+https://docs.qgroundcontrol.com/master/en/getting_started/download_and_install.html#ubuntu
+Ubuntu 18.04 中的 GSteamer 版本有一个错误，当在同时具有 Intel 和 NVidia 视频显示适配器的系统上使用基于 VA API 的解码器（即 vaapih264dec 等）时，该错误会阻止视频显示。
+更一般地说，虽然已知该问题发生在带有 Intel 和 NVidia VGA 的 Ubuntu 18.04 上，但它可能发生在任何 linux 系统和其他类型的（双）VGA 上。
+在这种情况下让QGroundControl工作的最简单方法是使用以下命令行启动它：
+LIBVA_DRIVER_NAME=fakedriver ./QGroundControl)  will this make the
+其他替代方法是禁用其中一个 VGA、卸载 VA API 组件或升级到 GStreamer 1.16

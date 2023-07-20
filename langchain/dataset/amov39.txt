@@ -1,0 +1,30 @@
+三十九、QGC连接问题：飞行器/车辆未显示在UI中
+一旦创建了通信链接（使用 USB 或 WiFi 等），QGC 将自动连接到车辆。如果您建立了该链接并且您没有在 QGC UI 中看到您的车辆，您可以使用控制台日志记录到帮助调试问题。
+使用以下步骤调试问题：
+从未连接的硬件车辆链接开始。例如，不要插入 USB 连接和/或在您的操作系统中建立 WiFi 链接。
+在 QGC 中打开LinkManagerLog 控制台日志记录。这将记录有关 QGC 看到并连接到的链接的输出。
+建立硬件车辆通信链路。
+控制台日志输出应显示如下内容：
+[D] at /Users/travis/build/mavlink/qgroundcontrol/src/comm/LinkManager.cc:563 - "Waiting for bootloader to finish "/dev/cu.usbmodem01""
+[D] at /Users/travis/build/mavlink/qgroundcontrol/src/comm/LinkManager.cc:563 - "Waiting for bootloader to finish "/dev/cu.usbmodem01""
+[D] at /Users/travis/build/mavlink/qgroundcontrol/src/comm/LinkManager.cc:563 - "Waiting for bootloader to finish "/dev/cu.usbmodem01""
+[D] at /Users/travis/build/mavlink/qgroundcontrol/src/comm/LinkManager.cc:563 - "Waiting for bootloader to finish "/dev/cu.usbmodem01""
+[D] at /Users/travis/build/mavlink/qgroundcontrol/src/comm/LinkManager.cc:572 - "Waiting for next autoconnect pass "/dev/cu.usbmodem4201""
+[D] at /Users/travis/build/mavlink/qgroundcontrol/src/comm/LinkManager.cc:613 - "New auto-connect port added:  "ArduPilot ChibiOS on cu.usbmodem4201 (AutoConnect)" "/dev/cu.usbmodem4201""
+前几行表示 QGC 已经建立了硬件链接，最后是自动连接。
+如果您没有看到任何这些，则 QGC 无法识别硬件链接。要查看您的硬件是否在操作系统级别被识别，请执行以下操作：
+从未连接的硬件车辆链接开始。例如，不要插入 USB 连接和/或在您的操作系统中建立 WiFi 链接。
+在 QGC 中打开LinkManagerVerboseLog 控制台日志记录。这将记录 QGC 识别的所有串行硬件连接的输出。
+您将看到设备上串行端口的连续输出。
+插入您的 USB 通信设备。
+您应该会在控制台输出中看到一个新设备。例子：
+[D] at /Users/travis/build/mavlink/qgroundcontrol/src/comm/LinkManager.cc:520 - "-----------------------------------------------------"
+[D] at /Users/travis/build/mavlink/qgroundcontrol/src/comm/LinkManager.cc:521 - "portName:           "cu.usbmodem4201""
+[D] at /Users/travis/build/mavlink/qgroundcontrol/src/comm/LinkManager.cc:522 - "systemLocation:     "/dev/cu.usbmodem4201""
+[D] at /Users/travis/build/mavlink/qgroundcontrol/src/comm/LinkManager.cc:523 - "description:        "Pixhawk1""
+[D] at /Users/travis/build/mavlink/qgroundcontrol/src/comm/LinkManager.cc:524 - "manufacturer:       "ArduPilot""
+[D] at /Users/travis/build/mavlink/qgroundcontrol/src/comm/LinkManager.cc:525 - "serialNumber:       "1B0034000847323433353231""
+[D] at /Users/travis/build/mavlink/qgroundcontrol/src/comm/LinkManager.cc:526 - "vendorIdentifier:   1155"
+[D] at /Users/travis/build/mavlink/qgroundcontrol/src/comm/LinkManager.cc:527 - "productIdentifier:  22336"
+之后它应该继续记录到该设备的连接，如第一个示例所示。
+如果在插入时控制台输出中没有看到新的串行端口，则可能是操作系统级别的硬件出现问题。

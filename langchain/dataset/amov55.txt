@@ -1,0 +1,8 @@
+五十五、可以通过机载电脑拉usb摄像头的流吗？
+可以，可以参考 克隆/下载 
+gimbal-control/
+ src /
+ gimbal_control /
+ launch /
+ rtsp_stream.launch 就在
+  gimbal-control/ src / gimbal_control /launch / rtsp_stream.launch 下面，你可能需要自己手动配置一下这个推流参数

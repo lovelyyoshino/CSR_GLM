@@ -245,7 +245,7 @@ class LocalDocQA:
         vector_store.chunk_conent = chunk_conent
         vector_store.score_threshold = score_threshold
         vector_store.chunk_size = chunk_size
-        related_docs_with_score = vector_store.similarity_search_with_score(query, k=vector_search_top_k)
+        related_docs_with_score = vector_store.similarity_search_with_score_by_vector(query, k=vector_search_top_k)
         if not related_docs_with_score:
             response = {"query": query,
                         "source_documents": []}

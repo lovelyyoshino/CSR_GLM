@@ -54,10 +54,10 @@ CHUNK_SIZE = 250
 LLM_HISTORY_LEN = 3
 
 # 知识库检索时返回的匹配内容条数
-VECTOR_SEARCH_TOP_K = 1 #原本是5
+VECTOR_SEARCH_TOP_K = 3 #原本是5
 
 # 知识检索内容相关度 Score, 数值范围约为0-1100，如果为0，则不生效，经测试设置为小于500时，匹配结果更精准
-VECTOR_SEARCH_SCORE_THRESHOLD = 300
+VECTOR_SEARCH_SCORE_THRESHOLD = 500
 
 NLTK_DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "nltk_data")
 

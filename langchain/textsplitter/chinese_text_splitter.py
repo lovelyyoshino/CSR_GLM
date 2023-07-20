@@ -1,7 +1,7 @@
 from langchain.text_splitter import CharacterTextSplitter
 import re
 from typing import List
-from configs.model_config import SENTENCE_SIZE
+from configs.model_config import SENTENCE_SIZE,CHUNK_SIZE
 
 
 class ChineseTextSplitter(CharacterTextSplitter):
@@ -30,7 +30,7 @@ class ChineseTextSplitter(CharacterTextSplitter):
             text = re.sub('\s', " ", text)
             text = re.sub("\n\n", "", text)
 
-        text = re.sub(r'([;；.!?。！？\?])([^”’])', r"\1\n\2", text)  # 单字符断句符
+        text = re.sub(r'([;；!?。！？\?])([^”’])(?<!\d)\.(?!\d)', r"\1\n\2", text)  # 单字符断句符
         text = re.sub(r'(\.{6})([^"’”」』])', r"\1\n\2", text)  # 英文省略号
         text = re.sub(r'(\…{2})([^"’”」』])', r"\1\n\2", text)  # 中文省略号
         text = re.sub(r'([;；!?。！？\?]["’”」』]{0,2})([^;；!?，。！？\?])', r'\1\n\2', text)
@@ -40,7 +40,7 @@ class ChineseTextSplitter(CharacterTextSplitter):
         ls = [i for i in text.split("\n") if i]
         for ele in ls:
             if len(ele) > self.sentence_size:
-                ele1 = re.sub(r'([,，.]["’”」』]{0,2})([^,，.])', r'\1\n\2', ele)
+                ele1 = re.sub(r'([,，]["’”」』]{0,2})([^,，](?<!\d)\.(?!\d))', r'\1\n\2', ele)
                 ele1_ls = ele1.split("\n")
                 for ele_ele1 in ele1_ls:
                     if len(ele_ele1) > self.sentence_size:

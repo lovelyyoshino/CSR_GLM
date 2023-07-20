@@ -1,0 +1,2 @@
+三十六、PX4地面站如进行航点飞行
+参考官方航线飞行教程：https://docs.qgroundcontrol.com/master/en/PlanView/PlanView.html

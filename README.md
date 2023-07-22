@@ -7,7 +7,6 @@
 主要构成有，暂定框架：
 
 ```bash
-│  chatglm-prompt.py # 初版的chatgpt训练prompt
 │  pdf_to_json.py # 将pdf文件拆分，并喂给chatglm
 │  README.md
 │  requirements.txt
@@ -17,6 +16,7 @@
 │
 ├─extra_tools # 其他常用的数据生成软件
 │      __init__.py
+│      chatglm-prompt.py # 初版的chatgpt训练prompt
 │
 ├─langchain # langchain，用于加载数据库
 │      __init__.py
@@ -33,17 +33,19 @@
 │      __init__.py
 │
 ├─llm_bridge # 连接各个模型和调用的插件渠道
+│      bridge_bloom.py # 与bloom的桥梁
 │      bridge_chatgpt.py # 与chatgpt的桥梁
 │      llm_bridge_all.py # 所有大模型与上级的接口
 │      token_calculate.py # token一些计算原则
 │      __init__.py
 │
-├─models # 本地模型存放位置
+├─model_all # 本地模型存放位置
 │      __init__.py
 │
 └─tools # 通用工具函数，主要用于处理文件信息与可视化
         color.py # 颜色信息
         config.py # 配置文件
+        core_functional.py # 动态更新prompt
         check_proxy.py # 检查代理状态
         file_conversion.py # 文件转换
         get_confs.py # 配置文件读取信息

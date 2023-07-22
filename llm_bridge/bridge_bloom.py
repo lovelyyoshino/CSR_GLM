@@ -13,7 +13,7 @@ from core_functional import get_core_functions
 sys.path.append("../bloom/src")
 from llmtuner import ChatModel
 
-class GetBloomhandle:
+class GetBloomhandle(Process):
     def __init__(self):
         super().__init__(daemon=True)
         self.parent, self.child = Pipe()

@@ -3,7 +3,7 @@ CUDA_VISIBLE_DEVICES=0 python ../src/train_bash.py \
     --model_name_or_path  /home/amov/LLaMA-Efficient-Tuning/model/bloom \
     --do_train \
     --dataset_dir ../data \
-    --dataset comparison_gpt4_en \
+    --dataset amov \
     --finetuning_type lora \
     --output_dir /home/amov/LLaMA-Efficient-Tuning/output/sft \
     --per_device_train_batch_size 1 \

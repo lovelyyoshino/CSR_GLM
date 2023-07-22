@@ -81,6 +81,9 @@
     "file_name": "comparison_gpt4_data_en.json",
     "file_sha1": "96fa18313544e22444fe20eead7754b17da452ae"
   },
+  "amov": {
+    "file_name": "amov_text.json"
+  },
   "comparison_gpt4_zh": {
     "file_name": "comparison_gpt4_data_zh.json",
     "file_sha1": "515b18ed497199131ddcc1af950345c11dc5c7fd"

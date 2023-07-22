@@ -13,6 +13,7 @@ from get_confs import get_conf, select_api_key, what_keys
 from color import print亮红, print亮绿, print亮蓝, print亮黄
 from check_proxy import check_proxy
 from file_conversion import regular_txt_to_markdown
+from core_functional import get_core_functions
 
 
 class GetChatGPTHandle:
@@ -195,8 +196,15 @@ def predict_long_connection(inputs, llm_kwargs, history=[], sys_prompt="", conso
     return result
 
 
-def predict(inputs, llm_kwargs, history=[], sys_prompt='', stream=True):
+def predict(inputs, llm_kwargs, history=[], sys_prompt='', stream=True, additional_fn=None):
     global gpt_handle
+
+    if additional_fn is not None:
+        importlib.reload(core_functional)    # 热更新prompt
+        core_functional = core_functional.get_core_functions()
+        if "PreProcess" in core_functional[additional_fn]: inputs = core_functional[additional_fn]["PreProcess"](inputs)  # 获取预处理函数（如果有的话）
+        inputs = core_functional[additional_fn]["Prefix"] + inputs + core_functional[additional_fn]["Suffix"]
+
     if gpt_handle is None:
         gpt_handle = GetChatGPTHandle()
     try:

@@ -4,9 +4,12 @@
 
 from llmtuner import ChatModel
 from llmtuner.tuner import get_infer_args
+import sys
 
 
 def main():
+    print("get_infer_args",*get_infer_args())
+    print(sys.argv)
     chat_model = ChatModel(*get_infer_args())
     history = []
     print("Welcome to the CLI application, use `clear` to remove the history, use `exit` to exit the application.")

@@ -35,7 +35,7 @@ AVAIL_LLM_MODELS = ["gpt-3.5-turbo", "api2d-gpt-3.5-turbo", "gpt-4", "api2d-gpt-
 
 
 # 本地LLM模型如ChatGLM的执行方式 CPU/GPU
-LOCAL_MODEL_DEVICE = "cpu" # 可选 "cuda"
+LOCAL_MODEL_DEVICE = "cuda" # 可选 "cuda"
 
 
 # if __name__ == "__main__":

@@ -9,6 +9,8 @@ from color import print亮红, print亮绿, print亮蓝, print亮黄
 from concurrent.futures import ThreadPoolExecutor
 from bridge_chatgpt import predict_long_connection as chatgpt_once
 from bridge_chatgpt import predict as chatgpt_stream
+from bridge_bloom import predict as bloom_once
+from bridge_bloom import predict_long_connection as bloom_stream
 
 def __get_token_num_gpt35(txt): return len(
     tokenizer_gpt3_5.encode(txt, disallowed_special=()))
@@ -38,6 +40,14 @@ model_type = {
         "max_token": 8192,
         "tokenizer": tokenizer_gpt4,
         "token_cnt": __get_token_num_gpt4,
+    },
+    "chatglm": {
+        "fn_with_ui": bloom_stream,
+        "fn_without_ui": bloom_once,
+        "endpoint": None,
+        "max_token": 1024,
+        "tokenizer": tokenizer_gpt3_5,
+        "token_cnt": __get_token_num_gpt35,
     }
 }
 
@@ -80,7 +90,6 @@ def chat_multiple_with_pre_chat(inputs, llm_kwargs, history, sys_prompt, console
     models.append("chatglm")  # 加入chatglm，这是默认模型
     n_model = len(models)
     executor = ThreadPoolExecutor(max_workers=n_model-1)
-    window_mutex = [["", time.time(), ""] for _ in range(n_model)] + [True]
     futures = []
     for i in range(n_model):
         model_t = models[i]

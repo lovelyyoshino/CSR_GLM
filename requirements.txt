@@ -24,7 +24,6 @@ trl>=0.4.1
 jieba
 rouge_chinese
 nltk
-gradio
 mdtex2html
 
 pymupdf
@@ -39,7 +38,6 @@ beautifulsoup4
 icetk
 cpm_kernels
 faiss-cpu
-gradio==3.28.3
 fastapi~=0.95.0
 uvicorn~=0.21.1
 pypinyin~=0.48.0

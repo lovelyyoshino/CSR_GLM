@@ -12,6 +12,7 @@ from bridge_chatgpt import predict as chatgpt_stream
 from bridge_bloom import predict as bloom_once
 from bridge_bloom import predict_long_connection as bloom_stream
 
+
 def __get_token_num_gpt35(txt): return len(
     tokenizer_gpt3_5.encode(txt, disallowed_special=()))
 
@@ -79,7 +80,7 @@ def __LLM_CATCH_EXCEPTION(f):
 """
 
 
-def chat_multiple_with_pre_chat(inputs, llm_kwargs, history, sys_prompt, console_slience=False):
+def chat_multiple_with_pre_chat(inputs, llm_kwargs, history, sys_prompt, console_slience=False,llm_models=None):
 
     model = llm_kwargs['llm_model']  # 获取待使用模型
     if len(model) == 0:  # 如果没有模型
@@ -89,39 +90,39 @@ def chat_multiple_with_pre_chat(inputs, llm_kwargs, history, sys_prompt, console
     models = [item for item in models if item != "chatglm"] # 删除元素"orange"
     models.append("chatglm")  # 加入chatglm，这是默认模型
     n_model = len(models)
-    executor = ThreadPoolExecutor(max_workers=n_model-1)
     futures = []
-    for i in range(n_model):
-        model_t = models[i]
-        if "chatglm" in model_t:
-            print亮黄("LLM模型含有基础的ChatGLM模型,最后会综述")
-            # 载入ChatGLM模型
-            continue
-        llm_kwargs_feedin = copy.deepcopy(llm_kwargs)
-        llm_kwargs_feedin['llm_model'] = model_t
-        print亮绿(f"正在使用{model_t}模型")
-        method = model_type[model_t]["fn_without_ui"]
-        future = executor.submit(__LLM_CATCH_EXCEPTION(
-            method), inputs, llm_kwargs_feedin, history, sys_prompt, console_slience)
-        futures.append(future)
     return_string_collect = []
-    while True:
-        worker_done = [h.done() for h in futures]
-        if all(worker_done):
-            executor.shutdown()
-            break
-        time.sleep(1)
+    if n_model >1:
+        executor = ThreadPoolExecutor(max_workers=n_model-1)
+        for i in range(n_model):
+            model_t = models[i]
+            if "chatglm" in model_t:
+                print亮黄("LLM模型含有基础的ChatGLM模型,最后会综述")
+                # 载入ChatGLM模型，因为载入比较费时这部分已经在主函数里面做了
+                continue
+            llm_kwargs_feedin = copy.deepcopy(llm_kwargs)
+            llm_kwargs_feedin['llm_model'] = model_t
+            print亮绿(f"正在使用{model_t}模型")
+            method = model_type[model_t]["fn_without_ui"]
+            future = executor.submit(__LLM_CATCH_EXCEPTION(
+                method), inputs, llm_kwargs_feedin, history, sys_prompt, console_slience)
+            futures.append(future)
+        while True:
+            worker_done = [h.done() for h in futures]
+            if all(worker_done):
+                executor.shutdown()
+                break
+            time.sleep(1)
 
-    for i, future in enumerate(futures):  # wait and get
-        return_string_collect.append(future.result())
-        # return_string_collect.append(
-        #     f"【{str(models[i])} 说】: {future.result()} </font>")
+        for i, future in enumerate(futures):  # wait and get
+            return_string_collect.append(future.result())
+            # return_string_collect.append(
+            #     f"【{str(models[i])} 说】: {future.result()} </font>")
+    llm_kwargs_feedin = copy.deepcopy(llm_kwargs)
+    llm_kwargs_feedin['llm_model'] = "chatglm"
+    # 这个时候会由chatglm总结，这时候需要重新设计sys_prompt
+    return_string_collect = predict(inputs, llm_kwargs, history=return_string_collect, sys_prompt="你是一个slam专家，请根据上面的内容组合总结并翻译下面的短语",llm_models = llm_models)
     return return_string_collect
-    # llm_kwargs_feedin = copy.deepcopy(llm_kwargs)
-    # llm_kwargs_feedin['llm_model'] = "chatglm"
-    # # 这个时候会由chatglm总结，这时候需要重新设计sys_prompt
-    # predict(future.result(), llm_kwargs, history=["机器人建图:"], sys_prompt="你是一个slam专家，请翻译下面的短语")
-
 
 """
     发送至LLM，流式获取输出。
@@ -134,10 +135,13 @@ def chat_multiple_with_pre_chat(inputs, llm_kwargs, history, sys_prompt, console
 """
 def predict(inputs, llm_kwargs, *args, **kwargs):
     method = model_type[llm_kwargs['llm_model']]["fn_with_ui"]
-    yield from method(inputs, llm_kwargs, *args, **kwargs)
+    return method(inputs, llm_kwargs, *args, **kwargs)
 
 
 if __name__ == "__main__":
+    sys.path.append("../../LLaMA-Efficient-Tuning/src")
+    from llmtuner import ChatModel
+    from llmtuner.tuner import get_infer_args
     proxies, LLM_MODEL, API_KEY = get_conf('proxies', 'LLM_MODEL',  'API_KEY')
     llm_kwargs = {
         'api_key': API_KEY,
@@ -146,4 +150,10 @@ if __name__ == "__main__":
         'max_length': None,
         'temperature': 1.0,
     }
-    print(chat_multiple_with_pre_chat("你好", llm_kwargs, [], ""))
+    chat_model = None
+    sys.argv=['bridge_bloom.py', '--dataset_dir', '../data', '--model_name_or_path', '/home/amov/LLaMA-Efficient-Tuning/model/bloom', '--quantization_bit', '8']
+    print("get_infer_args",*get_infer_args())
+    device, = get_conf('LOCAL_MODEL_DEVICE')
+    if device=='cuda':
+        chat_model =  ChatModel(*get_infer_args())
+    print(chat_multiple_with_pre_chat("你好", llm_kwargs, [], "",llm_models =chat_model))

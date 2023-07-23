@@ -4,6 +4,7 @@ import random
 import re
 from bs4 import BeautifulSoup
 from time import sleep
+from fake_useragent import UserAgent
 sys.path.append("../llm_bridge")
 from llm_bridge_all import model_type
 from fuction_utils import input_clipping,request_gpt_model_in_new_thread
@@ -11,6 +12,7 @@ sys.path.append("../tools")
 from get_confs import get_conf
 from color import print亮红, print亮绿, print亮蓝, print亮黄
 from check_proxy import check_proxy
+
 
 """
 通过搜索引擎搜索关键词，返回搜索结果
@@ -98,6 +100,33 @@ def baidu(v_keyword, proxies):
         # for item in url_over:
         #     result_all.append(item)
 
+
+def bing_search(query: str, proxies=None):
+    ua = UserAgent()
+    url = f"https://cn.bing.com/search?q={query}"
+    res = requests.get(
+        url,
+        headers={
+            "User-Agent": ua.random
+        },
+        proxies=proxies
+    )
+
+    results = []
+
+    for titleContext, caption in re.findall(
+        '<li class="b_algo"[^>]*><div class="tpcn"[^>]*>.*?</div><h2>(.*?)</h2><div class="b_caption">(.*?)</div></li>',
+        res.text,
+    ):
+        url, title = re.findall('<a[^>]*href="(.*?)"[^>]*>(.*?)</a>', titleContext)[0]
+
+        item = {'title': title, 'link': url}
+        results.append(item)
+
+    return results
+
+
+
 def scrape_text(url, proxies) -> str:#根据url爬取网页内容
     """Scrape text from a webpage
 
@@ -137,6 +166,8 @@ def website_search(txt, proxies, se=1):
         urls = google(txt,proxies)
     elif se==1:
         urls = baidu(txt,proxies)
+    elif se ==2:
+        urls = bing_search(txt,proxies)
 
     # ------------- < 第2步：依次访问网页 > -------------
     max_search_result = 5   # 最多收纳多少个网页的结果
@@ -148,27 +179,32 @@ def website_search(txt, proxies, se=1):
     return say_txt, history
 
 
-# if __name__ == "__main__":
-#     proxies, LLM_MODEL, API_KEY = get_conf('proxies', 'LLM_MODEL',  'API_KEY')
-#     history=[]
-#     say_txt="我现在的IP地址为"
-#     if check_proxy(proxies):
-#         say_txt, history =website_search("我现在的IP地址为", proxies,0)
-#     else:
-#         say_txt, history =website_search("我现在的IP地址为", proxies,1)
+if __name__ == "__main__":
+    proxies, LLM_MODEL, API_KEY = get_conf('proxies', 'LLM_MODEL',  'API_KEY')
+    history=[]
+    say_txt="我现在的IP地址为"
+    if check_proxy(proxies):
+        say_txt, history =website_search("我现在的IP地址为", proxies,0)
+        print亮蓝(f"使用google搜索，结果为：{history}")
+        say_txt, history =website_search("我现在的IP地址为", proxies,2)
+        print亮蓝(f"使用bing搜索，结果为：{history}")
+    else:
+        say_txt, history =website_search("我现在的IP地址为", proxies,1)
+        print亮蓝(f"使用百度搜索，结果为：{history}")
+
     
-#     llm_kwargs = {
-#         'api_key': API_KEY,
-#         'llm_model': LLM_MODEL,
-#         'top_p': 1.0,
-#         'max_length': None,
-#         'temperature': 1.0,
-#     }
-#     say_txt, history = input_clipping(    # 裁剪输入，从最长的条目开始裁剪，防止爆token
-#         inputs=say_txt, 
-#         history=history, 
-#         max_token_limit=model_type[llm_kwargs['llm_model']]['max_token']*3//4
-#     )
-#     print亮蓝(f"裁剪后的输入：{say_txt},{history}")
+    llm_kwargs = {
+        'api_key': API_KEY,
+        'llm_model': LLM_MODEL,
+        'top_p': 1.0,
+        'max_length': None,
+        'temperature': 1.0,
+    }
+    say_txt, history = input_clipping(    # 裁剪输入，从最长的条目开始裁剪，防止爆token
+        inputs=say_txt, 
+        history=history, 
+        max_token_limit=model_type[llm_kwargs['llm_model']]['max_token']*3//4
+    )
+    print亮蓝(f"裁剪后的输入：{say_txt},{history}")
 
 

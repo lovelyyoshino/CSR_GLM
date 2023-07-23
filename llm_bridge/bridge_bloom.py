@@ -10,9 +10,7 @@ from get_confs import get_conf, select_api_key, what_keys
 from color import print亮红, print亮绿, print亮蓝, print亮黄
 from check_proxy import check_proxy
 from core_functional import get_core_functions
-sys.path.append("../../LLaMA-Efficient-Tuning/src")
-from llmtuner import ChatModel
-from llmtuner.tuner import get_infer_args
+
 
 class GetBloomhandle(Process):
     def __init__(self):
@@ -66,7 +64,7 @@ class GetBloomhandle(Process):
 
 
 #################################################################################
-def predict_long_connection(inputs, llm_kwargs, history=[], sys_prompt="", console_slience=False,model=None):
+def predict_long_connection(inputs, llm_kwargs, history=[], sys_prompt="", console_slience=False,llm_models=None):
     """
         多线程方法
         函数的说明请见 request_llm/bridge_all.py
@@ -91,14 +89,14 @@ def predict_long_connection(inputs, llm_kwargs, history=[], sys_prompt="", conso
             "repetition_penalty": 1.0,
     }
     response = ""
-    new_text = model.chat(query=inputs, history=history_feedin,input_kwargs=gen_kwargs)
+    new_text = llm_models.chat(query=inputs, history=history_feedin,input_kwargs=gen_kwargs)
     print(new_text)
     response = new_text[0]
     return response
 
 
 
-def predict(inputs, llm_kwargs, history=[], sys_prompt='', stream = True, additional_fn=None,model=None):
+def predict(inputs, llm_kwargs, history=[], sys_prompt='', stream = True, additional_fn=None,llm_models=None):
     """
         单线程方法
         函数的说明请见 request_llm/bridge_all.py
@@ -130,7 +128,7 @@ def predict(inputs, llm_kwargs, history=[], sys_prompt='', stream = True, additi
             "repetition_penalty": 1.0,
     }
     response = ""
-    for new_text in model.stream_chat(query=inputs, history=history_feedin,input_kwargs=gen_kwargs):
+    for new_text in llm_models.stream_chat(query=inputs, history=history_feedin,input_kwargs=gen_kwargs):
         response += new_text
         print亮蓝(response)
 
@@ -141,6 +139,9 @@ def predict(inputs, llm_kwargs, history=[], sys_prompt='', stream = True, additi
     return response
 
 if __name__ == "__main__":
+    sys.path.append("../../LLaMA-Efficient-Tuning/src")
+    from llmtuner import ChatModel
+    from llmtuner.tuner import get_infer_args
     # 第一次运行，加载参数
     # bloom_handle = None
     chat_model = None

@@ -122,7 +122,7 @@ gpt_handle = None
 #################################################################################
 
 
-def predict_long_connection(inputs, llm_kwargs, history=[], sys_prompt="", console_slience=False):
+def predict_long_connection(inputs, llm_kwargs, history=[], sys_prompt="", console_slience=False,llm_models=None):
     global gpt_handle
     if gpt_handle is None:
         gpt_handle = GetChatGPTHandle()
@@ -196,7 +196,7 @@ def predict_long_connection(inputs, llm_kwargs, history=[], sys_prompt="", conso
     return result
 
 
-def predict(inputs, llm_kwargs, history=[], sys_prompt='', stream=True, additional_fn=None):
+def predict(inputs, llm_kwargs, history=[], sys_prompt='', stream=True, additional_fn=None,llm_models=None):
     global gpt_handle
 
     if additional_fn is not None:

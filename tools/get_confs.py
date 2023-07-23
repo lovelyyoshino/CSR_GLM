@@ -193,11 +193,11 @@ def get_conf(*args):
         res.append(r)
     return res
 
-# if __name__ == "__main__":
-#     key_config = get_conf('API_KEY')
-#     print(key_config,"\r\n",get_conf('proxies'))
-#     print(get_conf('API_KEY', 'proxies'))
+if __name__ == "__main__":
+    key_config = get_conf('API_KEY')
+    print(key_config,"\r\n",get_conf('proxies'))
+    print(get_conf('API_KEY', 'proxies'))
 
-#     api_key = select_api_key(key_config[0],"gpt-3.5-turbo")
-#     print(api_key)
-#     print(what_keys("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"))
+    api_key = select_api_key(key_config[0],"gpt-3.5-turbo")
+    print(api_key)
+    print(what_keys("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"))

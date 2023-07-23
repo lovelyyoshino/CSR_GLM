@@ -38,9 +38,9 @@ AVAIL_LLM_MODELS = ["gpt-3.5-turbo", "api2d-gpt-3.5-turbo", "gpt-4", "api2d-gpt-
 LOCAL_MODEL_DEVICE = "cuda" # 可选 "cuda"
 
 
-# if __name__ == "__main__":
-#     print("本文件是CHAT-GPT的配置文件，请勿直接运行。这里仅做测试，这里不建议修改相关的内容")
-#     print("本地LLM模型如ChatGLM的执行方式 CPU/GPU:", LOCAL_MODEL_DEVICE)
-#     LOCAL_MODEL_DEVICE = "cuda"
-#     print("本地LLM模型如ChatGLM的执行方式 CPU/GPU: %s" %LOCAL_MODEL_DEVICE)
+if __name__ == "__main__":
+    print("本文件是CHAT-GPT的配置文件，请勿直接运行。这里仅做测试，这里不建议修改相关的内容")
+    print("本地LLM模型如ChatGLM的执行方式 CPU/GPU:", LOCAL_MODEL_DEVICE)
+    LOCAL_MODEL_DEVICE = "cuda"
+    print("本地LLM模型如ChatGLM的执行方式 CPU/GPU: %s" %LOCAL_MODEL_DEVICE)
     

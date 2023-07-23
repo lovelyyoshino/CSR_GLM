@@ -301,21 +301,19 @@ def predict(inputs, llm_kwargs, history=[], sys_prompt='', stream=True, addition
                     else:
                         tb_str = '```\n' + trimmed_format_exc() + '```'
                         return regular_txt_to_markdown(chunk_decoded[4:])
-            # else:
-            #     return history
 
-# if __name__ == "__main__":
-#     proxies, LLM_MODEL, API_KEY = get_conf('proxies', 'LLM_MODEL',  'API_KEY')
-#     llm_kwargs = {
-#         'api_key': API_KEY,
-#         'llm_model': LLM_MODEL,
-#         'top_p': 1.0,
-#         'max_length': None,
-#         'temperature': 1.0,
-#     }
-#     if check_proxy(proxies) == True:
-#         result = predict_long_connection("请解释一下mapping的意思", llm_kwargs, history=[""], sys_prompt="你是一个情感专家")
-#         print亮蓝(result)
-#         time.sleep(20)
-#         result = predict("robot mapping", llm_kwargs, history=["机器人建图:"], sys_prompt="你是一个slam专家，请翻译下面的短语")
-#         print亮蓝(result)
+if __name__ == "__main__":
+    proxies, LLM_MODEL, API_KEY = get_conf('proxies', 'LLM_MODEL',  'API_KEY')
+    llm_kwargs = {
+        'api_key': API_KEY,
+        'llm_model': LLM_MODEL,
+        'top_p': 1.0,
+        'max_length': None,
+        'temperature': 1.0,
+    }
+    if check_proxy(proxies) == True:
+        result = predict_long_connection("请解释一下mapping的意思", llm_kwargs, history=[""], sys_prompt="你是一个情感专家")
+        print亮蓝(result)
+        time.sleep(20)
+        result = predict("robot mapping", llm_kwargs, history=["机器人建图:"], sys_prompt="你是一个slam专家，请翻译下面的短语")
+        print亮蓝(result)

@@ -33,7 +33,7 @@
 │      __init__.py
 │
 ├─llm_bridge # 连接各个模型和调用的插件渠道
-│      bridge_bloom.py # 与bloom的桥梁
+│      bridge_bloom.py # 与其他llm大模型的桥梁
 │      bridge_chatgpt.py # 与chatgpt的桥梁
 │      llm_bridge_all.py # 所有大模型与上级的接口
 │      token_calculate.py # token一些计算原则

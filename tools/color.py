@@ -94,8 +94,8 @@ if not stdout.isatty():
     print_bold_purple = print
     print_bold_indigo = print
 
-# if __name__ == "__main__":
-#     print_blue("蓝色")
-#     print_bold_blue("亮蓝色")
-#     print_red("红色")
-#     print_bold_red("亮红色")
+if __name__ == "__main__":
+    print_blue("蓝色")
+    print_bold_blue("亮蓝色")
+    print_red("红色")
+    print_bold_red("亮红色")

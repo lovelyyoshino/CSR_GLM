@@ -198,14 +198,14 @@ def markdown_convertion(txt: str):
         return pre + markdown.markdown(txt, extensions=['fenced_code', 'codehilite', 'tables', 'sane_lists']) + suf
 
 
-# if __name__ == "__main__":
-#     success, file_manifest, project_folder = get_files_from_everything(
-#         "/home/yc/Desktop/", ".md")
-#     if success:
-#         print("project_folder:", project_folder,
-#               ",file_manifest:", file_manifest)
-#     txt_file = read_file("C://Users//pony//Desktop//bash.txt")
-#     md_file = regular_txt_to_markdown(txt_file)
-#     write_file("C://Users//pony//Desktop//CSR_GLM//bash.md", md_file)
-#     html_file = markdown_convertion(md_file)
-#     write_file("C://Users//pony//Desktop//CSR_GLM//bash.html", html_file)
+if __name__ == "__main__":
+    success, file_manifest, project_folder = get_files_from_everything(
+        "/home/yc/Desktop/", ".md")
+    if success:
+        print("project_folder:", project_folder,
+              ",file_manifest:", file_manifest)
+    txt_file = read_file("C://Users//pony//Desktop//bash.txt")
+    md_file = regular_txt_to_markdown(txt_file)
+    write_file("C://Users//pony//Desktop//CSR_GLM//bash.md", md_file)
+    html_file = markdown_convertion(md_file)
+    write_file("C://Users//pony//Desktop//CSR_GLM//bash.html", html_file)

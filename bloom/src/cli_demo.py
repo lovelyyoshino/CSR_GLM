@@ -30,13 +30,13 @@ def main():
 
         print("Assistant: ", end="", flush=True)
         gen_kwargs = {
-            "top_p": 0.4,
-            "top_k": 0.1,
+            # "top_p": 0.4,
+            # "top_k": 0.1,
             "temperature": 0.95,
             "num_beams": 1,
             "max_length":4096,
             "max_new_tokens": 1024,
-            "repetition_penalty": 1.0,
+            # "repetition_penalty": 1.0,
         }
         response = ""
         for new_text in chat_model.stream_chat(query, history,input_kwargs=gen_kwargs):

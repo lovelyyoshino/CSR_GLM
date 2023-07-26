@@ -157,3 +157,12 @@ if __name__ == "__main__":
     if device=='cuda':
         chat_model =  ChatModel(*get_infer_args())
     print(chat_multiple_with_pre_chat("你好", llm_kwargs, [], "",llm_models =chat_model))
+    
+    llm_kwargs = {
+        'api_key': API_KEY,
+        'llm_model': "chatglm",
+        'top_p': 1.0,
+        'max_length': None,
+        'temperature': 1.0,
+    }
+    print(chat_multiple_with_pre_chat("你好", llm_kwargs, [], "",llm_models =chat_model))

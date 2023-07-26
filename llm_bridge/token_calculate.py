@@ -100,14 +100,14 @@ def clip_history(inputs, history, tokenizer, max_token_limit):
     return history
 
 
-# if __name__ == "__main__":
-#     token_模块预热 = tokenizer_gpt3_5.encode("模块预热")
-#     print(token_模块预热)
-#     print(tokenizer_gpt3_5.decode(token_模块预热))
+if __name__ == "__main__":
+    token_模块预热 = tokenizer_gpt3_5.encode("模块预热")
+    print(token_模块预热)
+    print(tokenizer_gpt3_5.decode(token_模块预热))
 
-#     token_模块预热 = tokenizer_gpt4.encode("模块预热")
-#     print(token_模块预热)
+    token_模块预热 = tokenizer_gpt4.encode("模块预热")
+    print(token_模块预热)
 
-#     print(trimmed_format_exc())
-#     print(clip_history("我是输入", ["我是历史记录"], tokenizer_gpt3_5, 256+3))
-#     print(clip_history("我是输入", ["我是历史记录"], tokenizer_gpt3_5, 256+4))
+    print(trimmed_format_exc())
+    print(clip_history("我是输入", ["我是历史记录"], tokenizer_gpt3_5, 256+3))
+    print(clip_history("我是输入", ["我是历史记录"], tokenizer_gpt3_5, 256+4))

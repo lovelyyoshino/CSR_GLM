@@ -11,7 +11,9 @@ from color import print亮红, print亮绿, print亮蓝, print亮黄
 from check_proxy import check_proxy
 from core_functional import get_core_functions
 
-
+"""
+暂时不用该方法完成stream，目前llm已经支持直接stream了
+"""
 class GetBloomhandle(Process):
     def __init__(self):
         super().__init__(daemon=True)
@@ -69,8 +71,6 @@ def predict_long_connection(inputs, llm_kwargs, history=[], sys_prompt="", conso
         多线程方法
         函数的说明请见 request_llm/bridge_all.py
     """
-    # if model is None:
-    #     model = GetBloomhandle()#实例化handle
 
     # bloom 没有 sys_prompt 接口，因此把prompt加入 history
     history_feedin = []
@@ -101,9 +101,6 @@ def predict(inputs, llm_kwargs, history=[], sys_prompt='', stream = True, additi
         单线程方法
         函数的说明请见 request_llm/bridge_all.py
     """
-
-    # if model is None:
-    #     model = GetBloomhandle()
 
     if additional_fn is not None:
         importlib.reload(core_functional)    # 热更新prompt

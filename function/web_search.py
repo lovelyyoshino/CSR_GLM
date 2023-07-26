@@ -14,6 +14,20 @@ from color import print亮红, print亮绿, print亮蓝, print亮黄
 from check_proxy import check_proxy
 
 
+def get_real_url(v_url, headers):
+	"""
+	获取百度链接真实地址
+	:param v_url: 百度链接地址
+	:return: 真实地址
+	"""
+	r = requests.get(v_url, headers=headers, allow_redirects=False)  # 不允许重定向
+	if r.status_code == 302:  # 如果返回302，就从响应头获取真实地址
+		real_url = r.headers.get('Location')
+	else:  # 否则从返回内容中用正则表达式提取出来真实地址
+		real_url = re.findall("URL='(.*?)'", r.text)[0]
+	# print('real_url is:', real_url)
+	return real_url
+
 """
 通过搜索引擎搜索关键词，返回搜索结果
 """
@@ -40,19 +54,6 @@ def google(query, proxies):
         print(r['link'])#打印结果
     return results
 
-def get_real_url(v_url, headers):
-	"""
-	获取百度链接真实地址
-	:param v_url: 百度链接地址
-	:return: 真实地址
-	"""
-	r = requests.get(v_url, headers=headers, allow_redirects=False)  # 不允许重定向
-	if r.status_code == 302:  # 如果返回302，就从响应头获取真实地址
-		real_url = r.headers.get('Location')
-	else:  # 否则从返回内容中用正则表达式提取出来真实地址
-		real_url = re.findall("URL='(.*?)'", r.text)[0]
-	# print('real_url is:', real_url)
-	return real_url
 # https://github.com/chao325/baidu_getUrls
 def baidu(v_keyword, proxies):
     """
@@ -100,7 +101,7 @@ def baidu(v_keyword, proxies):
         # for item in url_over:
         #     result_all.append(item)
 
-
+# https://github.com/bloop-tw/bing-search/tree/main
 def bing_search(query: str, proxies=None):
     ua = UserAgent()
     url = f"https://cn.bing.com/search?q={query}"
@@ -155,7 +156,7 @@ def scrape_text(url, proxies) -> str:#根据url爬取网页内容
     return text
 
 """
-0代表google搜索，1代表百度搜索
+0代表google搜索, 1代表百度搜索, 2代表bing
 """
 def website_search(txt, proxies, se=1):
     # ------------- < 第1步：爬取搜索引擎的结果 > -------------

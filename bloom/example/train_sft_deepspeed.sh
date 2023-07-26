@@ -1,6 +1,6 @@
 MASTER_PORT=$(shuf -n 1 -i 10000-65535)
 
-deepspeed --num_gpus=2 --master_port $MASTER_PORT ../python src/train_bash.py \
+deepspeed --num_gpus=2 --master_port $MASTER_PORT ../src/train_bash.py \
     --stage sft \
     --model_name_or_path  /home/amov/LLaMA-Efficient-Tuning/model/bloom \
     --do_train \
@@ -17,6 +17,7 @@ deepspeed --num_gpus=2 --master_port $MASTER_PORT ../python src/train_bash.py \
     --learning_rate 1e-3 \
     --num_train_epochs 1.0 \
     --plot_loss \
+    --lora_rank 2 \
     --lora_target query_key_value \
     --quantization_bit 8 \
     --fp16

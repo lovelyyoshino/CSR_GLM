@@ -253,20 +253,20 @@ def request_gpt_model_multi_threads_with_high_efficiency(
 
 
 
-# if __name__ == "__main__":
-#     inputs,history = input_clipping("你好",["你好", "你好", "你好"], 8)
-#     print(inputs,",",history)
-#     proxies, LLM_MODEL, API_KEY = get_conf('proxies', 'LLM_MODEL',  'API_KEY')
-#     llm_kwargs = {
-#         'api_key': API_KEY,
-#         'llm_model': LLM_MODEL,
-#         'top_p': 1.0,
-#         'max_length': None,
-#         'temperature': 1.0,
-#     }
-#     if check_proxy(proxies) == True:
-#         gpt_say = request_gpt_model_in_new_thread("请解释一下mapping的意思", llm_kwargs, history=[""], sys_prompt="你是一个情感专家")  # 带超时倒计时
-#         print亮蓝(gpt_say)
+if __name__ == "__main__":
+    inputs,history = input_clipping("你好",["你好", "你好", "你好"], 8)
+    print(inputs,",",history)
+    proxies, LLM_MODEL, API_KEY = get_conf('proxies', 'LLM_MODEL',  'API_KEY')
+    llm_kwargs = {
+        'api_key': API_KEY,
+        'llm_model': LLM_MODEL,
+        'top_p': 1.0,
+        'max_length': None,
+        'temperature': 1.0,
+    }
+    if check_proxy(proxies) == True:
+        gpt_say = request_gpt_model_in_new_thread("请解释一下mapping的意思", llm_kwargs, history=[""], sys_prompt="你是一个情感专家")  # 带超时倒计时
+        print亮蓝(gpt_say)
 
-#         gpt_say = request_gpt_model_multi_threads_with_high_efficiency(["请解释一下mapping的意思","请解释一下love的意思"], llm_kwargs, history_array=[[""],[""]], sys_prompt_array=["你是一个slam专家","你是一个情感专家"])  # 带超时倒计时
-#         print亮蓝(gpt_say)
+        gpt_say = request_gpt_model_multi_threads_with_high_efficiency(["请解释一下mapping的意思","请解释一下love的意思"], llm_kwargs, history_array=[[""],[""]], sys_prompt_array=["你是一个slam专家","你是一个情感专家"])  # 带超时倒计时
+        print亮蓝(gpt_say)

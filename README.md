@@ -103,6 +103,8 @@ https://github.com/ztxz16/fastllm
 
 常用数据项目：
 
+https://github.com/lonePatient/awesome-pretrained-chinese-nlp-models
+
 https://github.com/chenking2020/FindTheChatGPTer
 
 https://github.com/shibing624/MedicalGPT

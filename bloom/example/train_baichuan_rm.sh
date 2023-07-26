@@ -1,20 +1,20 @@
 CUDA_VISIBLE_DEVICES=0 python ../src/train_bash.py \
-    --stage sft \
-    --model_name_or_path  /home/amov/LLaMA-Efficient-Tuning/model/bloom \
+    --stage rm \
+    --model_name_or_path /home/amov/LLaMA-Efficient-Tuning/model/baichuan \
     --do_train \
     --dataset_dir ../data \
-    --dataset amov \
+    --dataset amov_rm \
     --finetuning_type lora \
-    --output_dir /home/amov/LLaMA-Efficient-Tuning/output/sft \
+    --output_dir /home/amov/LLaMA-Efficient-Tuning/output/rm \
     --per_device_train_batch_size 1 \
     --gradient_accumulation_steps 1 \
     --lr_scheduler_type cosine \
     --logging_steps 10 \
     --save_steps 1000 \
-    --learning_rate 1e-3 \
-    --num_train_epochs 1.0 \
+    --prompt_template baichuan \
+    --learning_rate 1e-5 \
+    --num_train_epochs 3.0 \
     --plot_loss \
-    --prompt_template default \
-    --lora_target query_key_value \
+    --lora_target W_pack \
     --quantization_bit 8 \
     --fp16

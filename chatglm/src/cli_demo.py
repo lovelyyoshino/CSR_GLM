@@ -9,7 +9,7 @@ from glmtuner.tuner import get_infer_args
 def main():
     chat_model = ChatModel(*get_infer_args())
     history = []
-    print("欢迎使用 ChatGLM-6B 模型，输入内容即可对话，clear 清空对话历史，stop 终止程序")
+    print("欢迎使用大模型，输入内容即可对话，clear 清空对话历史，stop 终止程序")
 
     while True:
         try:
@@ -28,15 +28,23 @@ def main():
             print("History has been removed.")
             continue
 
-        print("ChatGLM-6B: ", end="", flush=True)
-
+        print("模型输入: ", end="", flush=True)
+        gen_kwargs = {
+            "top_p": 0.75,
+            "top_k": 0.1,
+            "temperature": 0.95,
+            "num_beams": 1,
+            "max_length":4096,
+            "max_new_tokens": 1024,
+            "repetition_penalty": 1.0,
+        }
         response = ""
-        for new_text in chat_model.stream_chat(query, history):
+        for new_text in chat_model.stream_chat(query, history,input_kwargs=gen_kwargs):
             print(new_text, end="", flush=True)
             response += new_text
         print()
 
-        history = history + [(query, response)]
+       #  history = history + [(query, response)]
 
 
 if __name__ == "__main__":

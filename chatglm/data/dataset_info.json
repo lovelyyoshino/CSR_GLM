@@ -84,6 +84,10 @@
    "amov": {
     "file_name": "amov_text.json"
    },
+   "codeGen": {
+    "file_name": "codegen.json"
+   },
+
     "example": {
         "script_url": "example_dataset",
         "columns": {

@@ -41,8 +41,8 @@ def main():
     args.api_key = "sk-IwHMBXeWyuLRp8kFEWZiNS6IlJJliO8MWXNMyhfXq35hFPEQ"
     # args.api_key = "ZW5waGFXNXVNVEV4UURFMk15NWpiMjA9"
 
-    str_name = 'extra_tools/auto-dataset-generate-by-chatgpt/src/市场分析.txt'
-    # str_name = '市场分析.txt'
+    # str_name = 'extra_tools/auto-dataset-generate-by-chatgpt/src/市场分析.txt'
+    str_name = '市场分析.txt'
     file_extension = os.path.splitext(str_name)[1].lower()
     if file_extension == ".pdf":
         print("Read PDF")

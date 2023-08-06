@@ -1,82 +1,100 @@
-import PyPDF2
+import sys
 import os
 from tqdm.auto import tqdm
 from utils import (
     generate_subtopic,
     generate_question,
     generate_answer,
-    prepare_args,
-    BudgetTracker
+    BudgetTracker,
+)
+from utils.format import DataSetArguments
+tool_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(tool_path)
+sys.path.append(tool_path+'\\tools')
+from tools.file_split import(
+    breakdown_txt_to_satisfy_token_limit_using_advance_method_list,
+    read_and_clean_pdf_text
 )
 
-args = prepare_args()
+def get_args(generalization_index:float = 0.75,
+        generalization_basic:int = 10,
+        number_of_dataset:int = 5,
+        topic:str = None,
+        dataset_output_path:str = 'dataset',
+        proxy:str = None,
+        api_key:str = None,
+        api_base:str = None,
+        tokenBudget:float = 100,
+        retry_time:int = 5,
+        token_limit:int = 100):  #生成args，并对个参数进行赋值
+    model_args = DataSetArguments(
+        generalization_index=generalization_index,
+        generalization_basic=generalization_basic,
+        number_of_dataset=number_of_dataset,
+        topic=topic,        
+        dataset_output_path=dataset_output_path,
+        proxy=proxy,
+        api_key=api_key,
+        api_base = api_base,
+        tokenBudget=tokenBudget,
+        retryTime=retry_time,
+        tokenLimit=token_limit
+    )
+    return model_args
 
-"""
-pdf内容读取，目前是按照@作为分割符的，后续可以考虑按照。号或者其他符号作为分割符
-"""
-def pdf_reader(pdf_file):
-    #images = pdf2image.convert_from_path(pdf_file)
-    with open(pdf_file, "rb") as file:
-        pdf_reader = PyPDF2.PdfReader(file) 
-        doc_text = ""
-        for page_num in range(len(pdf_reader.pages)):
-            doc_text += pdf_reader.pages[page_num].extract_text()
-    prompts = doc_text.split("@")
-    return prompts
-"""
-markdown内容读取，目前是按照@作为分割符的，后续可以考虑按照。号或者其他符号作为分割符
-"""
-def mk_reader(mk_file):
-    with open(mk_file, "r", encoding="utf-8") as file:
-        content = file.read()
-        prompts = content.split("@")
-    return prompts
+def get_prompts(file_path:str, limit:int):  #根据文件名读取文件，并对其进行分割
 
-def main():
-    # Create a budget tracker to keep track of the token budget
-    budget_tracker = BudgetTracker(total_budget=args.tokenBudget)
+    def mk_reader(mk_file):
+        with open(mk_file, "r", encoding="utf-8") as file:
+            content = file.read()
+        return content
 
-    # Initialize a progress bar with the total number of datasets to be generated
-    # args.api_key = "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"
-    args.api_key = "sk-IwHMBXeWyuLRp8kFEWZiNS6IlJJliO8MWXNMyhfXq35hFPEQ"
-    # args.api_key = "ZW5waGFXNXVNVEV4UURFMk15NWpiMjA9"
-
-    # str_name = 'extra_tools/auto-dataset-generate-by-chatgpt/src/市场分析.txt'
-    str_name = '市场分析.txt'
-    file_extension = os.path.splitext(str_name)[1].lower()
+    def get_token_fn1(txt: str): 
+        return len(txt)
+    
+    file_extension = os.path.splitext(file_path)[1].lower()
+    
     if file_extension == ".pdf":
         print("Read PDF")
-        prompts = pdf_reader(str_name)
+        split_text,  page_one_meta= read_and_clean_pdf_text(file_path)
     elif file_extension == ".md":
         print("Read MD")
-        prompts = mk_reader(str_name)
+        split_text = mk_reader(file_path)
     elif file_extension == ".txt":
         print("Read TXT")
-        prompts = mk_reader(str_name)
-    # Generate a subtopic based on the provided topic and generalization parameters
-    
+        split_text = mk_reader(file_path)
+    else:
+        print("Read TXT")
+    result = breakdown_txt_to_satisfy_token_limit_using_advance_method_list(split_text, get_token_fn1, limit)
+    return result
+
+def dataset_generate(prompts:list, args:DataSetArguments):  #根据API和文件分割获得的prompts，生成相关的dataset，并对其进行保存
+    budget_tracker = BudgetTracker(total_budget=args.tokenBudget)
     for prompt in prompts:
-        # pbar = tqdm(total=args.number_of_dataset, desc="Processing")
-        # while pbar.n < pbar.total:
         args.topic = prompt
+        print("generating subtopic......")
         sub_topic = generate_subtopic(args=args,
                                         budget_tracker=budget_tracker)
+        print(str(len(sub_topic)) + ' subtopics are generated')
 
         # Generate questions based on the topic, subtopic, and API key
+        print("generating question......")
         questions = generate_question(sub_topic=sub_topic,
                                         args=args,
                                         budget_tracker=budget_tracker)
+        print(str(len(sub_topic)) + ' question are generated')
 
         # Generate answers for the questions using the API key and update the budget tracker and progress bar
-        # generate_answer(questions=questions,
-        #                 budget_tracker=budget_tracker,
-        #                 pbar=pbar,
-        #                 args=args)
+        print("generate_answer")
         generate_answer(questions=questions,
                         budget_tracker=budget_tracker,
                         args=args)
 
-
 if __name__ == '__main__':
-    main()
+    # args = get_args(api_key="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")
+    args = get_args(api_key="sk-IwHMBXeWyuLRp8kFEWZiNS6IlJJliO8MWXNMyhfXq35hFPEQ", api_base="https://api.chatanywhere.com.cn")
+    # args = get_args(api_key="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", api_base="https://openai.451024.xyz/")
+    # prompts = get_prompts('extra_tools/auto-dataset-generate-by-chatgpt/src/市场分析.txt', args.tokenLimit)
+    prompts = get_prompts('市场分析.txt', args.tokenLimit)
+    dataset_generate(prompts, args)
 

@@ -28,6 +28,7 @@ class BudgetTracker:
 class ChatAPI:
     def __init__(self, api_key=None,
                  model='gpt-3.5-turbo',
+                 api_base=None,
                  system_settings='You are a capable assistant, making every effort to provide assistance to users.',
                  temperature=0.7,
                  proxy=None):
@@ -50,8 +51,9 @@ class ChatAPI:
         if self.proxy:
             openai.proxy = self.proxy
         
-        if api_key == "sk-IwHMBXeWyuLRp8kFEWZiNS6IlJJliO8MWXNMyhfXq35hFPEQ":
-            openai.api_base = "https://api.chatanywhere.com.cn/v1"
+        if api_base is not None:
+           openai.api_base = api_base 
+        
 
     def chat(self, prompt, budget_tracker):
         # Perform a chat conversation with OpenAI API
@@ -195,7 +197,7 @@ def generate_answer(questions: List[str], budget_tracker: BudgetTracker, args: D
     # Generate answers for the given list of questions using the API key, budget tracker, progress bar, and output path
     api = ChatAPI(api_key=args.api_key, system_settings='你是一个知识丰富的助手，展示出你的才能！',
                   proxy=args.proxy)
-    answers = []
+    
 
     def process_question(question):
         prompt = f"""
@@ -210,60 +212,18 @@ def generate_answer(questions: List[str], budget_tracker: BudgetTracker, args: D
             "question": question,
             "answer": response
         }
-        # pbar.update(1)
         return answer_dict
 
     generated_answers = 0
-    # current_index = 0
     current_questions = questions
     current_retry_time = -1
-    # with concurrent.futures.ThreadPoolExecutor() as executor:
-    #     while generated_answers < len(questions) and current_retry_time < args.retry_time:
-    #         # batch_size = min(20, len(questions) - generated_answers)
-    #         # questions_batch = questions[generated_answers:len(questions)-1]
-    #         # questions_batch = questions[current_index:current_index + batch_size]
-    #         # current_index = current_index + batch_size
-    #         questions_batch = current_questions
-    #         current_retry_time += 1
-    #         current_questions = []
-    #         future_to_question = {executor.submit(process_question, question): question for question in
-    #                               questions_batch}
 
-    #         for future in concurrent.futures.as_completed(future_to_question):
-    #             question = future_to_question[future]
-    #             try:
-    #                 answer = future.result()
-    #                 answers.append(answer)
-    #                 generated_answers += 1
-    #                 # print((pbar.format_dict['elapsed'] / pbar.n) * (pbar.total - pbar.n))
-    #                 # log_dict = {
-    #                 #     "current_number": pbar.n,
-    #                 #     "total_count": pbar.total,
-    #                 #     "percentage": pbar.n / pbar.total,
-    #                 #     "elapsed_time": str(timedelta(seconds=int(pbar.format_dict['elapsed']))),
-    #                 #     "remaining_time": str(timedelta(seconds=int((pbar.format_dict['elapsed'] / pbar.n) * (pbar.total - pbar.n)))),
-    #                 #     "budget": budget_tracker.total_budget,
-    #                 #     "current_cost": budget_tracker.current_cost
-    #                 # }
-    #                 # print(json.dumps(log_dict))
-    #                 # if budget_tracker.is_budget_exceeded() or pbar.n == pbar.total:
-    #                 if budget_tracker.is_budget_exceeded():
-    #                     write_dict_list_to_file(data_list=answers, output_path=args.dataset_output_path)
-    #                     sys.exit(0)
-    #             except Exception as e:
-    #                 print(f"Error occurred for question: {question}. Error message: {str(e)}")
-    #                 current_questions.append(question)
-
-    while generated_answers < len(questions) and current_retry_time < args.retry_time:
+    while generated_answers < len(questions) and current_retry_time < args.retryTime:
         questions_batch = current_questions
         current_questions = []
         current_retry_time += 1
+        answers = []
         with concurrent.futures.ThreadPoolExecutor() as executor:
-            # batch_size = min(20, len(questions) - generated_answers)
-            # questions_batch = questions[generated_answers:len(questions)-1]
-            # questions_batch = questions[current_index:current_index + batch_size]
-            # current_index = current_index + batch_size
-            
             future_to_question = {executor.submit(process_question, question): question for question in
                                   questions_batch}
             for future in concurrent.futures.as_completed(future_to_question):
@@ -272,23 +232,11 @@ def generate_answer(questions: List[str], budget_tracker: BudgetTracker, args: D
                     answer = future.result()
                     answers.append(answer)
                     generated_answers += 1
-                    # print((pbar.format_dict['elapsed'] / pbar.n) * (pbar.total - pbar.n))
-                    # log_dict = {
-                    #     "current_number": pbar.n,
-                    #     "total_count": pbar.total,
-                    #     "percentage": pbar.n / pbar.total,
-                    #     "elapsed_time": str(timedelta(seconds=int(pbar.format_dict['elapsed']))),
-                    #     "remaining_time": str(timedelta(seconds=int((pbar.format_dict['elapsed'] / pbar.n) * (pbar.total - pbar.n)))),
-                    #     "budget": budget_tracker.total_budget,
-                    #     "current_cost": budget_tracker.current_cost
-                    # }
-                    # print(json.dumps(log_dict))
-                    # if budget_tracker.is_budget_exceeded() or pbar.n == pbar.total:
                     if budget_tracker.is_budget_exceeded():
                         write_dict_list_to_file(data_list=answers, output_path=args.dataset_output_path)
                         sys.exit(0)
                 except Exception as e:
                     print(f"Error occurred for question: {question}. Error message: {str(e)}")
                     current_questions.append(question)
-
-    write_dict_list_to_file(data_list=answers, output_path=args.dataset_output_path)
+        write_dict_list_to_file(data_list=answers, output_path=args.dataset_output_path)
+        print(str(len(answers)) + " answers have been written to " + str(args.dataset_output_path))

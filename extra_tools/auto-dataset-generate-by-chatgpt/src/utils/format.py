@@ -51,14 +51,24 @@ class DataSetArguments:
         metadata={"help": "The OpenAI API-KEY"}
     )
 
-    tokenBudget: float = field(
-        default=1,
-        metadata={"help": "Token budget. Default is 1"}
+    api_base: str = field(
+        default=None,
+        metadata={"help": "The OpenAI API-BASE"}
     )
 
-    retry_time: int = field(
+    tokenBudget: float = field(
+        default=100,
+        metadata={"help": "Token budget. Default is 100"}
+    )
+
+    retryTime: int = field(
         default=5,
         metadata={"help": "The number of retry times to the chat_gpt API Default is 5"}
+    )
+
+    tokenLimit: int = field(
+        default = 100,
+        metadata={"help": "Not less than 50, default is 100"}
     )
 
 

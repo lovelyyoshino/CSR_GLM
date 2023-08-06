@@ -5,11 +5,13 @@ import re
 import numpy as np
 from color import print亮红, print亮绿, print亮蓝, print亮黄
 from file_conversion import write_file, read_file
+import os
 
 """
 将文本按照段落分隔符分割开，生成带有段落标签的HTML代码。
 """
 
+def get_token_fn(txt: str): return len(txt)
 
 def text_divide_as_html_paragraph(text: str):
     if '```' in text:  # 如果文本中拥有代码，则直接返回文本
@@ -27,10 +29,9 @@ def text_divide_as_html_paragraph(text: str):
 当无法用标点、空行分割时，我们用最暴力的方法切割
 """
 
-
 def txt_force_breakdown(txt: str, get_token_fn, limit: int):
     for i in reversed(range(len(txt))):  # 从文本最后往前遍历
-        if get_token_fn(txt[:i]) < limit:  # 如果长度小于限制，则直接返回
+        if get_token_fn(str(txt[:i])) < limit:  # 如果长度小于限制，则直接返回
             return txt[:i], True  # 返回前面的部分和后面的部分
     return txt, False
 
@@ -170,15 +171,18 @@ def breakdown_txt_to_satisfy_token_limit_using_advance_method_list(txt, get_toke
                 post = "\n".join(lines[cnt:])
                 if get_token_fn(prev) < limit:
                     break
+            status_force = True
             if cnt == 0:
                 if break_anyway:
-                    prev, post = txt_force_breakdown(txt_tocut, limit, get_token_fn)
+                    prev, status_force = txt_force_breakdown(txt_tocut, get_token_fn, limit)
+                    post = "\n".join(txt_tocut[len(prev):])
                 else:
                     raise RuntimeError(f"存在一行极长的文本！{txt_tocut}")
             # print(len(post))
             # 列表递归接龙
             result = [prev]
-            result.extend(cut(post, must_break_at_empty_line, break_anyway=break_anyway))
+            if status_force == True:
+                result.extend(cut(post, must_break_at_empty_line, break_anyway=break_anyway))
             return result
     try:
         # 第1次尝试，将双空行（\n\n）作为切分点
@@ -200,8 +204,6 @@ def breakdown_txt_to_satisfy_token_limit_using_advance_method_list(txt, get_toke
                 except RuntimeError as e:
                     # 第5次尝试，没办法了，随便切一下敷衍吧
                     return cut(txt, must_break_at_empty_line=False, break_anyway=True)
-
-
 
 """
 这个函数用于分割pdf，用了很多trick，逻辑较乱，效果奇好
@@ -405,37 +407,40 @@ if __name__ == "__main__":
         1. 首先，提出了一种多点分布聚合方法来从较少的点稳健估计体素的分布。\r\n\
         2. 其次，提出了VGICP算法，它与GICP一样精确，但比现有方法快得多。\r\n\
         3. 第三，代码开源，并且代码实现了包含了所提出的VGICP以及GICP。"
+    # txt = '1.1市场需求分析从深蓝学院再到各大知识星球的学习和宣传，我们发现确实这些知识付费的形式也越来越受到广大学习者的认可。但是我们发现这类学习除了服务以外，其他都可以被非常便捷的抄袭，这会大大损害作者的收益。而且这类课程基本讲解的还是比较具体的，很多都是带着学院研读等操作，这类方式其实我们完全可以通过大模型的形式来提供非常便捷且合适的学习途径。现在的机器人从业者没有一个非常便捷的可以快速获取并学习的大模型网站，而这个就是我们需要努力的方向。1.2．竞品市场分析（己有竞品的数据分析)：1. Chatgpt:可以根据用户输入的上下文对话生成逻辑连贯和深度的回复。chatgpt能生成更具逻辑性和连贯性的长篇回复。但是其训练模型更多的是英语，所以对于中文还是显得比较生硬和机械，不够贴近人的说话方式。同时无法提供非常专业的问题答案----比如说机器人行业的知识。2.文心一言:文心一言是百度开发的一款AI 聊天机器人。它通过深度学习和大数据技术，可以根据用的文本输入自动生成一句符合语境的回复。它的优点是回复流畅和贴近人话，但生成的回复比较肤浅和欠缺深度，不太能进行深入的对话。同时无法提供非常专业的问题答案---比如说机器人行业的知识。\n'
 
     def get_token_fn(txt: str): return len(txt)
 
-    result, status = txt_force_breakdown(txt, get_token_fn, 50)
+    result, status = txt_force_breakdown(txt, get_token_fn, 100)
     if status:
         print("1:", result)
 
-    result = breakdown_txt_to_satisfy_token_limit(txt, get_token_fn, 50, False)
+    result = breakdown_txt_to_satisfy_token_limit(txt, get_token_fn, 100, False)
     print("2:", result)
 
     result = breakdown_txt_to_satisfy_token_limit(
-        txt, get_token_fn, 200, False)
+        txt, get_token_fn, 100, False)
     print("3:", result)
 
     result = breakdown_txt_to_satisfy_token_limit(
-        txt, get_token_fn, 500, False)
+        txt, get_token_fn, 100, False)
     print("4:", result)
 
-    result = breakdown_txt_to_satisfy_token_limit(txt, get_token_fn, 500, True)
+    result = breakdown_txt_to_satisfy_token_limit(txt, get_token_fn, 100, True)
     print("5:", result)
 
     result = breakdown_txt_to_satisfy_token_limit_using_advance_method(
-        txt, get_token_fn, 500)
-    print("6 段落:", result)
-
-    result = breakdown_txt_to_satisfy_token_limit_using_advance_method_list(
         txt, get_token_fn, 100)
+    print("6 段落:", result)
+    start_time = os.times()
+    print(start_time)
+    result = breakdown_txt_to_satisfy_token_limit_using_advance_method_list(
+        txt, get_token_fn, 2)
+    print(os.times()-start_time)
     print("7 句号:", result)
-
+   
     result = breakdown_txt_to_satisfy_token_limit_using_advance_method(
-        txt, get_token_fn, 50)
+        txt, get_token_fn, 100)   
     print("8 force:", result)
 
     # result, one_paragraph = read_and_clean_pdf_text(

@@ -91,8 +91,8 @@ def dataset_generate(prompts:list, args:DataSetArguments):  #根据API和文件�
                         args=args)
 
 if __name__ == '__main__':
-    # args = get_args(api_key="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")
-    args = get_args(api_key="sk-IwHMBXeWyuLRp8kFEWZiNS6IlJJliO8MWXNMyhfXq35hFPEQ", api_base="https://api.chatanywhere.com.cn")
+    args = get_args(api_key="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")
+    # args = get_args(api_key="sk-IwHMBXeWyuLRp8kFEWZiNS6IlJJliO8MWXNMyhfXq35hFPEQ", api_base="https://api.chatanywhere.com.cn")
     # args = get_args(api_key="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", api_base="https://openai.451024.xyz/")
     # prompts = get_prompts('extra_tools/auto-dataset-generate-by-chatgpt/src/市场分析.txt', args.tokenLimit)
     prompts = get_prompts('市场分析.txt', args.tokenLimit)

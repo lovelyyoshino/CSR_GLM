@@ -15,7 +15,7 @@ def extract_list(answers, tag='example'):
 @dataclass
 class DataSetArguments:
     generalization_index: float = field(
-        default=0.0,
+        default=0.75,
         metadata={
             "help": "Generalization Index, the higher it is, the more diverse the dataset is. Default value is 0.0"}
     )
@@ -26,8 +26,8 @@ class DataSetArguments:
     )
 
     number_of_dataset: int = field(
-        default=100,
-        metadata={"help": "The number of generated datasets. Default is 100"}
+        default=5,
+        metadata={"help": "The number of generated datasets. Default is 5"}
     )
 
     topic: str = field(
@@ -51,22 +51,38 @@ class DataSetArguments:
         metadata={"help": "The OpenAI API-KEY"}
     )
 
+    api_base: str = field(
+        default=None,
+        metadata={"help": "The OpenAI API-BASE"}
+    )
+
     tokenBudget: float = field(
-        default=1,
-        metadata={"help": "Token budget. Default is 1"}
+        default=100,
+        metadata={"help": "Token budget. Default is 100"}
+    )
+
+    retryTime: int = field(
+        default=5,
+        metadata={"help": "The number of retry times to the chat_gpt API Default is 5"}
+    )
+
+    tokenLimit: int = field(
+        default = 100,
+        metadata={"help": "Not less than 50, default is 100"}
     )
 
 
 def prepare_args() -> DataSetArguments:
     parser = ArgumentParser()
-    parser.add_argument('--generalization_index', type=float, default=0.0)
+    parser.add_argument('--generalization_index', type=float, default=0.75)
     parser.add_argument('--generalization_basic', type=int, default=10)
-    parser.add_argument('--number_of_dataset', type=int, default=100)
+    parser.add_argument('--number_of_dataset', type=int, default=5)
     parser.add_argument('--topic', type=str, default=None)
     parser.add_argument('--dataset_output_path', type=str, default='data')
     parser.add_argument('--proxy', type=str, default=None)
     parser.add_argument('--api_key', nargs='+', default=None)
     parser.add_argument('--tokenBudget', type=float, default=1)
+    parser.add_argument('--retry_time', type=int, default=5)
     args = parser.parse_args()
     model_args = DataSetArguments(
         generalization_index=args.generalization_index,
@@ -76,6 +92,7 @@ def prepare_args() -> DataSetArguments:
         dataset_output_path=args.dataset_output_path,
         proxy=args.proxy,
         api_key=args.api_key,
-        tokenBudget=args.tokenBudget
+        tokenBudget=args.tokenBudget,
+        retry_time=args.retry_time
     )
     return model_args

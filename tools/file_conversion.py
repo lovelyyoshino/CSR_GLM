@@ -49,7 +49,7 @@ def get_files_from_everything(txt: str, type):  # type='.md'
     success = True
     if txt.startswith('http'):
         # 网络的远程文件
-        proxies, = get_conf('proxies')
+        proxies, = get_confs('proxies')
         r = requests.get(txt, proxies=proxies)
         with open('./gpt_log/temp'+type, 'wb+') as f:
             f.write(r.content)

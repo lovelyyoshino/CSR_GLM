@@ -28,6 +28,7 @@ class BudgetTracker:
 class ChatAPI:
     def __init__(self, api_key=None,
                  model='gpt-3.5-turbo',
+                 api_base=None,
                  system_settings='You are a capable assistant, making every effort to provide assistance to users.',
                  temperature=0.7,
                  proxy=None):
@@ -42,12 +43,17 @@ class ChatAPI:
         self.proxy = proxy
 
         if len(api_key) > 0:
-            openai.api_key = random.choice(api_key)
+            openai.api_key = api_key
+            
         else:
             raise ValueError("api_key is empty or incorrect")
 
         if self.proxy:
             openai.proxy = self.proxy
+        
+        if api_base is not None:
+           openai.api_base = api_base 
+        
 
     def chat(self, prompt, budget_tracker):
         # Perform a chat conversation with OpenAI API
@@ -60,10 +66,15 @@ class ChatAPI:
                         {"role": "system", "content": self.system_settings},
                         {"role": "user", "content": prompt}
                     ],
+                    max_tokens=300,
+                    deployment_id = None,
                     temperature=self.temperature
                 )
                 tokens_used = response.usage['total_tokens']
                 budget_tracker.total_tokens_used += tokens_used
+                # choices_answer = response["choices"]
+                # completion_answer = choices_answer[0].message.content.strip()
+                # return completion_answer
                 return response.choices[0].message.content
             except Exception as e:
                 print(f"An error occurred: {str(e)}")
@@ -126,7 +137,8 @@ def generate_question(sub_topic: List[str], args: DataSetArguments, budget_track
 
             # Dynamically generate tasks to submit to the thread pool
             future_to_question = {
-                executor.submit(process_question, example + topic + conditions): question
+                # executor.submit(process_question, example + topic + conditions): question
+                executor.submit(process_question, topic + conditions): question
                 for question in range(batch_size)
             }
 
@@ -180,11 +192,12 @@ def generate_subtopic(args: DataSetArguments,
     return extract_list(api.chat(prompt=prompt, budget_tracker=budget_tracker), 'SubTopic')
 
 
-def generate_answer(questions: List[str], budget_tracker: BudgetTracker, pbar, args: DataSetArguments):
+# def generate_answer(questions: List[str], budget_tracker: BudgetTracker, pbar, args: DataSetArguments):
+def generate_answer(questions: List[str], budget_tracker: BudgetTracker, args: DataSetArguments):
     # Generate answers for the given list of questions using the API key, budget tracker, progress bar, and output path
     api = ChatAPI(api_key=args.api_key, system_settings='你是一个知识丰富的助手，展示出你的才能！',
                   proxy=args.proxy)
-    answers = []
+    
 
     def process_question(question):
         prompt = f"""
@@ -199,40 +212,31 @@ def generate_answer(questions: List[str], budget_tracker: BudgetTracker, pbar, a
             "question": question,
             "answer": response
         }
-        pbar.update(1)
         return answer_dict
 
     generated_answers = 0
-    current_index = 0
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        while generated_answers < len(questions):
-            batch_size = min(20, len(questions) - generated_answers)
-            questions_batch = questions[current_index:current_index + batch_size]
-            current_index = current_index + batch_size
+    current_questions = questions
+    current_retry_time = -1
+
+    while generated_answers < len(questions) and current_retry_time < args.retryTime:
+        questions_batch = current_questions
+        current_questions = []
+        current_retry_time += 1
+        answers = []
+        with concurrent.futures.ThreadPoolExecutor() as executor:
             future_to_question = {executor.submit(process_question, question): question for question in
                                   questions_batch}
-
             for future in concurrent.futures.as_completed(future_to_question):
                 question = future_to_question[future]
                 try:
                     answer = future.result()
                     answers.append(answer)
                     generated_answers += 1
-                    print((pbar.format_dict['elapsed'] / pbar.n) * (pbar.total - pbar.n))
-                    log_dict = {
-                        "current_number": pbar.n,
-                        "total_count": pbar.total,
-                        "percentage": pbar.n / pbar.total,
-                        "elapsed_time": str(timedelta(seconds=int(pbar.format_dict['elapsed']))),
-                        "remaining_time": str(timedelta(seconds=int((pbar.format_dict['elapsed'] / pbar.n) * (pbar.total - pbar.n)))),
-                        "budget": budget_tracker.total_budget,
-                        "current_cost": budget_tracker.current_cost
-                    }
-                    print(json.dumps(log_dict))
-                    if budget_tracker.is_budget_exceeded() or pbar.n == pbar.total:
+                    if budget_tracker.is_budget_exceeded():
                         write_dict_list_to_file(data_list=answers, output_path=args.dataset_output_path)
                         sys.exit(0)
                 except Exception as e:
                     print(f"Error occurred for question: {question}. Error message: {str(e)}")
-
-    write_dict_list_to_file(data_list=answers, output_path=args.dataset_output_path)
+                    current_questions.append(question)
+        write_dict_list_to_file(data_list=answers, output_path=args.dataset_output_path)
+        print(str(len(answers)) + " answers have been written to " + str(args.dataset_output_path))

@@ -17,6 +17,7 @@
 ├─extra_tools # 其他常用的数据生成软件
 │      __init__.py
 │      chatglm-prompt.py # 初版的chatgpt训练prompt
+│      auto-dataset-generate-by-chatgpt # 第二代QA自动问答
 │
 ├─langchain # langchain，用于加载数据库
 │      __init__.py

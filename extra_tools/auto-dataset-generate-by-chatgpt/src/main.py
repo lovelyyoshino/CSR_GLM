@@ -3,18 +3,23 @@ import os
 from tqdm.auto import tqdm
 from utils import (
     generate_subtopic,
-    generate_question,
-    generate_answer,
+    generate_question_chatgpt,
+    generate_answer_chatgpt, 
+    generate_answer_pandora,
+    generate_question_pandora,
     BudgetTracker,
 )
 from utils.format import DataSetArguments
 tool_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 sys.path.append(tool_path)
 sys.path.append(tool_path+'\\tools')
+sys.setrecursionlimit(100000)  #例如这里设置为十万
 from tools.file_split import(
     breakdown_txt_to_satisfy_token_limit_using_advance_method_list,
     read_and_clean_pdf_text
 )
+
+global args
 
 def get_args(generalization_index:float = 0.75,
         generalization_basic:int = 10,
@@ -24,8 +29,10 @@ def get_args(generalization_index:float = 0.75,
         proxy:str = None,
         api_key:str = None,
         api_base:str = None,
+        api_key_list:list = None,
         tokenBudget:float = 100,
         retry_time:int = 5,
+        api_index:int = 0,
         token_limit:int = 100):  #生成args，并对个参数进行赋值
     model_args = DataSetArguments(
         generalization_index=generalization_index,
@@ -34,7 +41,9 @@ def get_args(generalization_index:float = 0.75,
         topic=topic,        
         dataset_output_path=dataset_output_path,
         proxy=proxy,
-        api_key=api_key,
+        api_key_list=api_key_list,
+        api_index=api_index,
+        api_key=api_key_list[api_index],
         api_base = api_base,
         tokenBudget=tokenBudget,
         retryTime=retry_time,
@@ -73,28 +82,45 @@ def dataset_generate(prompts:list, args:DataSetArguments):  #根据API和文件�
     for prompt in prompts:
         args.topic = prompt
         print("generating subtopic......")
-        sub_topic = generate_subtopic(args=args,
+        while True:
+            args.api_index, sub_topic = generate_subtopic(args=args,
                                         budget_tracker=budget_tracker)
+            if len(sub_topic) > 0:
+                break
+        
         print(str(len(sub_topic)) + ' subtopics are generated')
 
         # Generate questions based on the topic, subtopic, and API key
         print("generating question......")
-        questions = generate_question(sub_topic=sub_topic,
+        if args.api_key.startswith('fk'):
+            args.api_index, questions = generate_question_pandora(sub_topic=sub_topic,
                                         args=args,
                                         budget_tracker=budget_tracker)
-        print(str(len(sub_topic)) + ' question are generated')
+        else:
+            questions = generate_question_chatgpt(sub_topic=sub_topic,
+                                        args=args,
+                                        budget_tracker=budget_tracker)
+        print(str(len(questions)) + ' question are generated')
 
         # Generate answers for the questions using the API key and update the budget tracker and progress bar
         print("generate_answer")
-        generate_answer(questions=questions,
-                        budget_tracker=budget_tracker,
-                        args=args)
+        if args.api_key.startswith('fk'):
+            args.index = generate_answer_pandora(questions=questions,
+                            budget_tracker=budget_tracker,
+                            args=args)
+        else:
+            generate_answer_chatgpt(questions=questions,
+                            budget_tracker=budget_tracker,
+                            args=args)
 
 if __name__ == '__main__':
-    args = get_args(api_key="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")
+    # args = get_args(api_key="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")
     # args = get_args(api_key="sk-IwHMBXeWyuLRp8kFEWZiNS6IlJJliO8MWXNMyhfXq35hFPEQ", api_base="https://api.chatanywhere.com.cn")
     # args = get_args(api_key="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", api_base="https://openai.451024.xyz/")
-    # prompts = get_prompts('extra_tools/auto-dataset-generate-by-chatgpt/src/市场分析.txt', args.tokenLimit)
-    prompts = get_prompts('市场分析.txt', args.tokenLimit)
+    # args = get_args(api_key_list=["fk-XCRfd6OKAWGxX9Lgr7iFkxM-nnpT4L7n0hCgUb9vzSM", "fk--JJiSZdnp6orTQ5XnBCRWXGtM2hb2GeuTdCffyswgZg", "fk-4o6U0arG0AQK4PFW8y5epnfS7w3JBoGUBkudoN5zlXc"], api_index=0)
+    args = get_args(api_key_list=["fk-XCRfd6OKAWGxX9Lgr7iFkxM-nnpT4L7n0hCgUb9vzSM","fk--JJiSZdnp6orTQ5XnBCRWXGtM2hb2GeuTdCffyswgZg", "fk-4o6U0arG0AQK4PFW8y5epnfS7w3JBoGUBkudoN5zlXc","fk-xjGaTrkiJ0ErilWzJ3aUcjhp70zu2RRv1RMDWnLZqzM", "fk-xZHsw62T1-4oVYuRrLo46yKRwvYJcFKqOb4m6n6Nbvo"], api_index=0)
+    prompts = get_prompts('第一章.md', args.tokenLimit)
+    # prompts = get_prompts('市场分析.txt', args.tokenLimit)
     dataset_generate(prompts, args)
+    print("complete generate dataset")
 

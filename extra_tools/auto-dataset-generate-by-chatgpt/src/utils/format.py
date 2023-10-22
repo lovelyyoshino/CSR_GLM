@@ -71,6 +71,16 @@ class DataSetArguments:
         metadata={"help": "Not less than 50, default is 100"}
     )
 
+    api_key_list: List[str] = field(
+        default=None,
+        metadata={"help": "api_key_list."}
+    )
+
+    api_index: int = field(
+        default=0,
+        metadata={"help": "The index of api key in the api_key_list. Default is 0"}
+    )
+
 
 def prepare_args() -> DataSetArguments:
     parser = ArgumentParser()

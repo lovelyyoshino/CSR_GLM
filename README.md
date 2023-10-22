@@ -17,7 +17,7 @@
 ├─extra_tools # 其他常用的数据生成软件
 │      __init__.py
 │      chatglm-prompt.py # 初版的chatgpt训练prompt
-│      auto-dataset-generate-by-chatgpt # 第二代QA自动问答
+│      auto-dataset-generate-by-chatgpt #通用数据集构建
 │
 ├─langchain # langchain，用于加载数据库
 │      __init__.py
@@ -43,15 +43,20 @@
 ├─model_all # 本地模型存放位置
 │      __init__.py
 │
-└─tools # 通用工具函数，主要用于处理文件信息与可视化
-        color.py # 颜色信息
-        config.py # 配置文件
-        core_functional.py # 动态更新prompt
-        check_proxy.py # 检查代理状态
-        file_conversion.py # 文件转换
-        get_confs.py # 配置文件读取信息
-        __init__.py
-
+├─tools # 通用工具函数，主要用于处理文件信息与可视化
+│       color.py # 颜色信息
+│       config.py # 配置文件
+│       core_functional.py # 动态更新prompt
+│       check_proxy.py # 检查代理状态
+│       file_conversion.py # 文件转换
+│       get_confs.py # 配置文件读取信息
+│       __init__.py
+│
+├─web #运行模型的前后端代码样例
+│       chat_web.py #后端demo
+│       thread_test_new.py #后端测试工具
+│       client.js #前端demo
+│
 ```
 
 
@@ -125,5 +130,4 @@ https://www.bilibili.com/video/BV1m8411Z7xm/?buvid=YE4976EFE8199FBB493186957D993
 https://github.com/SupritYoung/RLHF-Label-Tool
 
 https://github.com/mMrBun/dataset-generate-by-gpt3.5-python
-
 

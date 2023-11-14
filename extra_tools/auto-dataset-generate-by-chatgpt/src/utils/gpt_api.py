@@ -100,8 +100,8 @@ class FKAPI:
         self.model = model
         self.system_settings = system_settings
         self.temperature = temperature
-        self.max_retries = 5
-        self.retry_delay = 20
+        self.max_retries = len(api_key_list) + 2
+        self.retry_delay = 10
         self.api_key_list = api_key_list
         self.api_index = api_index
         self.proxy = proxy 
@@ -136,23 +136,23 @@ class FKAPI:
 
             except Exception as e:
                 print(f"An error occurred: {str(e)}")
-                # if 'error' in response.json():
-                #     error = response.json()['error']['message']
-                #     error_str = 'Please try again later'
-                #     # error_str = 'Access token is missing'
-                #     if error.find(error_str) != -1:
-                #         if self.api_index < len(self.api_key_list) - 1:
-                #             self.api_index += 1
-                #         else:
-                #             self.api_index = 0
-                #         self.api_key = self.api_key_list[self.api_index]
-                #         print(f"API key index: {self.api_index}, API key: {self.api_key_list[self.api_index]}")
-                if self.api_index < len(self.api_key_list) - 1:
-                    self.api_index += 1
-                else:
-                    self.api_index = 0
-                self.api_key = self.api_key_list[self.api_index]
-                print(f"API key index: {self.api_index}, API key: {self.api_key_list[self.api_index]}")
+                if str(e) == "'choices'" and 'error' in response.json():
+                    error = response.json()['error']['message']
+                    error_str = 'Please try again later'
+                    # error_str = 'Access token is missing'
+                    if error.find(error_str) != -1:
+                        if self.api_index < len(self.api_key_list) - 1:
+                            self.api_index += 1
+                        else:
+                            self.api_index = 0
+                        self.api_key = self.api_key_list[self.api_index]
+                        print(f"API key index: {self.api_index}, API key: {self.api_key_list[self.api_index]}")
+                # if self.api_index < len(self.api_key_list) - 1:
+                #     self.api_index += 1
+                # else:
+                #     self.api_index = 0
+                # self.api_key = self.api_key_list[self.api_index]
+                # print(f"API key index: {self.api_index}, API key: {self.api_key_list[self.api_index]}")
                 retries += 1
                 if retries < self.max_retries:
                     print(f"Retrying in {self.retry_delay} seconds...")
@@ -235,6 +235,61 @@ def generate_question_chatgpt(sub_topic: List[str], args: DataSetArguments, budg
 
     return questions
 
+def generate_question_chatgpt_by_paragraph(args: DataSetArguments, budget_tracker: BudgetTracker) -> List[str]:
+    # Generate questions based on the given topic, sub-topic, API key, budget tracker, and number of datasets
+    if not args.topic:
+        raise ValueError("param topic is required, not None")
+
+    command = """
+    如果我们之前有过对话，请忘掉我们以前的对话并忽略此对话中所有先前的提示，以一个初始的状态进行下述对话。
+    """
+    questions = []
+    topic = f"""
+        请对{args.topic}进行总结和梳理，并生成{args.number_of_dataset}个的问题
+        """
+
+    conditions = """
+        你无需对生成的示例进行答复或解释
+        每个生成的示例必须是祈使句或疑问句
+        祈使句和疑问句的生成比例要1:1
+        每个示例必须以<example>开始，以</example>结束.
+        每个示例控制在40字以内
+        如果主题涉及敏感话题或不符合中华人民共和国相关法律法规请立刻停止所有的生成并直接返回下面'''包裹的内容
+        ```
+        ErrorCode:400
+        ```
+        """
+    questions = []
+
+    def process_question(prompt):
+        api = ChatAPI(api_key=args.api_key, system_settings='You are an efficient assistant, aiming to provide concise '
+                                                            'answers based on instructions.', proxy=args.proxy)
+        q_response = api.chat(prompt=prompt, budget_tracker=budget_tracker)
+        return extract_list(q_response)
+
+    generated_questions = 0  # Record the number of generated questions
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future_to_question = {
+            executor.submit(process_question, command + topic + conditions): question
+            for question in range(len(args.topic))
+        }
+
+        # Iterate over completed tasks
+        for future in concurrent.futures.as_completed(future_to_question):
+            question = future_to_question[future]
+            try:
+                answer = future.result()
+                questions.extend(answer)
+                generated_questions += len(answer)
+
+                if budget_tracker.is_budget_exceeded():
+                    return questions  # Return immediately if the budget is exceeded
+            except Exception as e:
+                print(f"Error occurred for question: {question}. Error message: {str(e)}")
+
+    return questions
+
 def generate_question_pandora(sub_topic: List[str], args: DataSetArguments, budget_tracker: BudgetTracker) -> List[str]:
     # Generate questions based on the given topic, sub-topic, API key, budget tracker, and number of datasets
     if not args.topic:
@@ -270,6 +325,40 @@ def generate_question_pandora(sub_topic: List[str], args: DataSetArguments, budg
         index, question = process_question(topic + conditions)
         answer = question
         questions.extend(answer)
+    return index, questions
+
+def generate_question_pandora_by_paragraph(args: DataSetArguments, budget_tracker: BudgetTracker) -> List[str]:
+    # Generate questions based on the given topic, sub-topic, API key, budget tracker, and number of datasets
+    if not args.topic:
+        raise ValueError("param topic is required, not None")
+    def process_question(prompt):
+        api = FKAPI(args.api_key_list, args.api_index, api_key=args.api_key_list[args.api_index], system_settings='You are an efficient assistant, aiming to provide concise '
+                                                                'answers based on instructions.', proxy=args.proxy)
+        q_response = api.chat(prompt=prompt, budget_tracker=budget_tracker)
+        return api.api_index, extract_list(q_response)
+
+    command = """
+    如果我们之前有过对话，请忘掉我们以前的对话并忽略此对话中所有先前的提示，以一个初始的状态进行下述对话。
+    """
+    questions = []
+    topic = f"""
+        请对{args.topic}进行总结和梳理，并生成{args.number_of_dataset}个的问题
+        """
+
+    conditions = """
+        你无需对生成的示例进行答复或解释
+        每个生成的示例必须是祈使句或疑问句
+        祈使句和疑问句的生成比例要1:1
+        每个示例必须以<example>开始，以</example>结束.
+        每个示例控制在40字以内
+        如果主题涉及敏感话题或不符合中华人民共和国相关法律法规请立刻停止所有的生成并直接返回下面'''包裹的内容
+        ```
+        ErrorCode:400
+        ```
+        """
+    index, question = process_question(command + topic + conditions)
+    answer = question
+    questions.extend(answer)
     return index, questions
 
 def generate_subtopic(args: DataSetArguments,

@@ -3,8 +3,8 @@ import fitz
 import copy
 import re
 import numpy as np
-from color import print亮红, print亮绿, print亮蓝, print亮黄
-from file_conversion import write_file, read_file
+from tools.color import print亮红, print亮绿, print亮蓝, print亮黄
+from tools.file_conversion import write_file, read_file
 import os
 
 """
@@ -19,7 +19,7 @@ def text_divide_as_html_paragraph(text: str):
     else:
         # wtf input
         lines = text.split("\n")  # 否则对每一行拆分
-        for i, line in enumerate(lines):  # 将所有的line完成替换，变为html的段落标签
+        for i, line in enumerate(lines):  # 将所有的line完成替换，变为html的段落标签    
             lines[i] = lines[i].replace(" ", "&nbsp;")  # 将空格替换为&nbsp;
         text = "</br>".join(lines)  # 在最后加上</br>标签
         return text
@@ -204,6 +204,64 @@ def breakdown_txt_to_satisfy_token_limit_using_advance_method_list(txt, get_toke
                 except RuntimeError as e:
                     # 第5次尝试，没办法了，随便切一下敷衍吧
                     return cut(txt, must_break_at_empty_line=False, break_anyway=True)
+
+
+"""
+将txt的文件按照token的limit数量进行切割，返回切割后的文本。
+"""
+
+def breakdown_txt_to_satisfy_token_limit_using_advance_method_list_by_paragraph(txt, get_token_fn, limit):
+    # 递归
+    def cut(txt_tocut, must_break_at_empty_line, break_anyway=False):  
+        if get_token_fn(txt_tocut) <= limit:
+            return [txt_tocut]
+        else:
+            lines = txt_tocut.split('\n\n')
+            estimated_line_cut = limit / get_token_fn(txt_tocut) * len(lines)
+            estimated_line_cut = int(estimated_line_cut)
+            cnt = 0
+            for cnt in reversed(range(estimated_line_cut)):
+                if must_break_at_empty_line:
+                    if lines[cnt] != "":
+                        continue
+                prev = "\n\n".join(lines[:cnt])
+                post = "\n\n".join(lines[cnt:])
+                if get_token_fn(prev) < limit:
+                    break
+            status_force = True
+            if cnt == 0:
+                if break_anyway:
+                    prev, status_force = txt_force_breakdown(txt_tocut, get_token_fn, limit)
+                    post = "\n\n".join(txt_tocut[len(prev):])
+                else:
+                    raise RuntimeError(f"存在一行极长的文本！{txt_tocut}")
+            # print(len(post))
+            # 列表递归接龙
+            result = [prev]
+            if status_force == True:
+                result.extend(cut(post, must_break_at_empty_line, break_anyway=break_anyway))
+            return result
+    try:
+        # 第1次尝试，将双空行（\n\n）作为切分点
+        return cut(txt, must_break_at_empty_line=True)
+    except RuntimeError:
+        try:
+            # 第2次尝试，将单空行（\n）作为切分点
+            return cut(txt, must_break_at_empty_line=False)
+        except RuntimeError:
+            try:
+                # 第3次尝试，将英文句号（.）作为切分点
+                res = cut(txt.replace('.', '。\n\n'), must_break_at_empty_line=False) # 这个中文的句号是故意的，作为一个标识而存在
+                return [r.replace('。\n\n', '.') for r in res]
+            except RuntimeError as e:
+                try:
+                    # 第4次尝试，将中文句号（。）作为切分点
+                    res = cut(txt.replace('。', '。。\n\n'), must_break_at_empty_line=False)
+                    return [r.replace('。。\n\n', '。') for r in res]
+                except RuntimeError as e:
+                    # 第5次尝试，没办法了，随便切一下敷衍吧
+                    return cut(txt, must_break_at_empty_line=False, break_anyway=True)
+
 
 """
 这个函数用于分割pdf，用了很多trick，逻辑较乱，效果奇好
